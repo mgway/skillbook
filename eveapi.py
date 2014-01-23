@@ -13,21 +13,53 @@ def key_info(id, code):
     return mask, query
 
 
-def character_sheet(id, code, character, mask):
+def character_sheet(id, code, mask, character):
     allowed(mask, 8)
     data = {'keyID': id, 'vCode': code, 'characterID': character}
     query = Query('/char/CharacterSheet.xml.aspx', data)
+    
+    # Fix up the data a little bit
+    query.birthday = datetime.strptime(query.dob, '%Y-%m-%d %H:%M:%S')
+    query.bio = ' - '.join([query.race, query.gender, query.bloodline, query.ancestry])
+    query.memory = query.attributes.memory
+    query.intelligence = query.attributes.intelligence
+    query.perception = query.attributes.perception
+    query.charisma = query.attributes.charisma
+    query.willpower = query.attributes.willpower
+
+    #Ugh
+    try:
+        query.memorybonus = query.attributeenhancers.memorybonus.augmentatorvalue
+    except AttributeError:
+        query.memorybonus = 0
+    try:
+        query.intelligencebonus = query.attributeenhancers.intelligencebonus.augmentatorvalue
+    except AttributeError:
+        query.intelligencebonus = 0
+    try:
+        query.perceptionbonus = query.attributeenhancers.perceptionbonus.augmentatorvalue
+    except AttributeError:
+        query.perceptionbonus = 0
+    try:
+        query.willpowerbonus = query.attributeenhancers.willpowerbonus.augmentatorvalue
+    except AttributeError:
+        query.willpowerbonus = 0
+    try:
+        query.charismabonus = query.attributeenhancers.charismabonus.augmentatorvalue
+    except AttributeError:
+        query.charismabonus = 0
+
     return query
 
 
-def market_orders(id, code, character, mask):
+def market_orders(id, code, mask, character):
     allowed(mask, 4096)
     data = {'keyID': id, 'vCode': code, 'characterID': character}
     query = Query('/char/MarketOrders.xml.aspx', data)
     return query
 
 
-def market_transactions(id, code, character, mask, row_count=1000):
+def market_transactions(id, code, mask, character, row_count=1000):
     allowed(mask, 4194304)
     data = {'keyID': id, 'vCode': code, 'characterID': character, 
             'rowCount': row_count}
@@ -35,7 +67,7 @@ def market_transactions(id, code, character, mask, row_count=1000):
     return query
 
 
-def wallet_journal(id, code, character, mask, row_count=1000):
+def wallet_journal(id, code, mask, character, row_count=1000):
     allowed(mask, 2097152)
     data = {'keyID': id, 'vCode': code, 'characterID': character, 
             'rowCount': row_count}
@@ -43,7 +75,7 @@ def wallet_journal(id, code, character, mask, row_count=1000):
     return query
 
 
-def skill_queue(id, code, character, mask):
+def skill_queue(id, code, mask, character):
     allowed(mask, 262144)
     data = {'keyID': id, 'vCode': code, 'characterID': character}
     query = Query('/char/SkillQueue.xml.aspx', data)
@@ -86,7 +118,7 @@ class Rowset:
 class Row:
     def __init__(self, row):
         for k,v in row.attrib.items():
-            setattr(self, k, v)
+            setattr(self, k.lower(), v)
         
     def __str__(self):
         return "<Row: " + str(self.__dict__) + ">"
