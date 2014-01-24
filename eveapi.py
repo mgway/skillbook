@@ -93,7 +93,6 @@ class Query:
     # which is useful for the character sheet
     def __init__(self, relative_url, data):
         result = requests.post(api_url + relative_url, data)
-        print(result.text)
         if result.status_code == 200:
             self.tree = ET.fromstring(result.text)
             for element in self.tree.findall('./result/*'):
@@ -102,6 +101,7 @@ class Query:
             cached = self.tree.find('./cachedUntil').text
             self.cached_until = datetime.strptime(cached, '%Y-%m-%d %H:%M:%S')
         else:
+            print(result.text)
             raise HttpException("The API returned status code " + str(result.status_code))
 
 

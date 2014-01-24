@@ -7,7 +7,13 @@ import psycopg2
 import os
 from collections import defaultdict
 
-conn = psycopg2.connect("host='localhost' dbname='eveskill' user='eveskill' password='eveskill'")
+import config
+
+conn_string = "host='%s' dbname='%s' user='%s' password='%s'" % \
+    (config.db.host, config.db.database, config.db.user, config.db.password)
+
+conn = psycopg2.connect(conn_string)
+
 
 def query(cursor, sql, args):
     cursor.execute(sql, args)
@@ -57,8 +63,8 @@ def check_login(username, password):
 def create_account(username, password):
     hashed, salt = __hash(password)
     with _cursor(conn) as c:
-        c.execute('INSERT INTO users (id, username, password, salt, created) VALUES (DEFAULT, %s, %s, %s, CURRENT_TIMESTAMP)', 
-                (username, hashed, salt))
+        c.execute('INSERT INTO users (id, username, password, salt, created) \
+                VALUES (DEFAULT, %s, %s, %s, CURRENT_TIMESTAMP)', (username, hashed, salt))
         conn.commit()
 
 
@@ -74,9 +80,9 @@ def add_key(user, key_id, key_code, key_mask, characters):
         conn.commit()
 
 
-def remove_key(user, key_id):
+def remove_key(user, keyid):
     with _cursor(conn) as c:
-        c.execute('DELETE FROM keys WHERE userid = %s AND keyid = %s', (user, key_id))
+        c.execute('DELETE FROM keys WHERE userid = %s AND keyid = %s', (user, keyid))
         conn.commit()
 
 
@@ -87,70 +93,130 @@ def get_characters_for_user(user):
         return list(r)
 
 
-def get_key(user, key_id):
+def get_character_for_user(user, characterid):
     with _cursor(conn) as c:
-        r = query_one(c, 'SELECT vcode, keymask from keys WHERE userid = %s AND keyid = %s', (user, key_id))
+        r = query(c, 'SELECT characterid, keyid, vcode, keymask FROM keys WHERE userid = %s \
+                AND characterid = %s', (user, characterid))
+        return r
+
+
+def get_key(user, keyid):
+    with _cursor(conn) as c:
+        r = query_one(c, 'SELECT vcode, keymask from keys WHERE userid = %s AND keyid = %s', (user, keyid))
         if r:
-            return key_id, r.vcode, r.keymask
+            return keyid, r.vcode, r.keymask
 
 
-def save_character_sheet(char):
+def save_character_sheet(character):
     with _cursor(conn) as c:
-
-        c.execute('UPDATE characters SET (name, corporationid, corporationname, bio, birthday, \
+        c.execute('UPDATE characters SET (updated, corporationid, corporationname, bio, birthday, \
                     clonegrade, clonesp, balance, intelligence, memory, willpower, \
                     perception, charisma, intelligencebonus, memorybonus, willpowerbonus, \
-                    perceptionbonus, charismabonus) \
-                    = (%(name)s, %(corporationid)s, %(corporationname)s, %(bio)s, %(birthday)s, \
+                    perceptionbonus, charismabonus) = \
+                    (CURRENT_TIMESTAMP, %(corporationid)s, %(corporationname)s, %(bio)s, %(birthday)s, \
                     %(clonename)s, %(cloneskillpoints)s, %(balance)s, %(intelligence)s,\
                     %(memory)s, %(willpower)s, %(perception)s, %(charisma)s, %(intelligencebonus)s, \
                     %(memorybonus)s, %(willpowerbonus)s, %(perceptionbonus)s,%(charismabonus)s) WHERE \
-                    characterid = %(characterid)s', char.__dict__)
+                    characterid = %(characterid)s', character.__dict__)
         conn.commit()
-
         
-        q = query(c, 'SELECT typeid, level, skillpoints FROM character_skills where characterid = %s', 
-                (char.characterid,))
+        q = query(c, 'SELECT typeid, level, skillpoints FROM character_skills WHERE characterid = %s', 
+                (character.characterid,))
 
         # Transform skills into a dict instead of a list
         skills = defaultdict()
-        for skill in char.skills.rows:
+        for skill in character.skills.rows:
             skills[skill.typeid] = {'level': skill.level, 'skillpoints': skill.skillpoints, 
-                    'typeid': skill.typeid, 'characterid': char.characterid}
+                    'typeid': skill.typeid, 'characterid': character.characterid}
 
-        # Go through skills that are in the db
-        for skill in q:
-            if skill.skillpoints == skills[skill.typeid]['skillpoints']:
-                # Delete items that are unchanged
-                del(skills[skill.typeid])
-            else:
-                # Skill was trained, update it
-                c.execute('UPDATE character_skills SET (characterid, typeid, level, skillpoints) = \
-                        (%(characterid)s, %(typeid)s, %(level)s, %(skillpoints)s)', skills[skill.typeid])
-                del(skills[skill.typeid])
+        # We need a new cursor because adding updates to cursor c's transaction during iteration 
+        # breaks its internal state
+        with _cursor(conn) as u:
+            # Go through skills that are in the db
+            for skill in q:
+                # We want a string key, not int
+                typeid = str(skill.typeid)
+                if skill.skillpoints == int(skills[typeid]['skillpoints']):
+                    # Delete items that are unchanged
+                    del(skills[typeid])
+                else:
+                    # Skill was trained, update it
+                    u.execute('UPDATE character_skills SET (level, skillpoints) = (%(level)s, %(skillpoints)s) \
+                            WHERE characterid = %(characterid)s AND typeid = %(typeid)s', skills[typeid])
+                    del(skills[typeid])
 
-        # Our set of skills from the api now contains only skills that are new
-        for skill in skills.values():
-            print(skill)
-            c.execute('INSERT INTO character_skills (characterid, typeid, level, skillpoints) VALUES \
-                    (%(characterid)s, %(typeid)s, %(level)s, %(skillpoints)s)', skill)
+            # Our set of skills from the api now contains only skills that are new
+            for skill in skills.values():
+                u.execute('INSERT INTO character_skills (characterid, typeid, level, skillpoints) VALUES \
+                        (%(characterid)s, %(typeid)s, %(level)s, %(skillpoints)s)', skill)
 
-        conn.commit()
+            conn.commit()
+
+
+def get_character_sheet(characterid):
+    with _cursor(conn) as c:
+        r = query_one(c, 'SELECT * FROM characters WHERE characterid = %s', (characterid,)) 
+        return r
 
 
 def save_skill_queue(characterid, queue):
     with _cursor(conn) as c:
         # Remove current training information
-        c.execute('UPDATE character_skills SET (training, starttime, endtime, queueposition) = (null, null, null, null) \
-                WHERE characterid = %s AND training', (characterid,))
+        c.execute('UPDATE character_skills SET (training, starttime, endtime, queueposition) = \
+                (null, null, null, null) WHERE characterid = %s AND training', (characterid,))
         for skill in queue.rows:
             data = skill.__dict__
             data['characterid'] = characterid
-            c.execute('UPDATE character_skills SET (training, starttime, endtime, queueposition) = \
-                    (TRUE, %(starttime)s, %(endtime)s, %(queueposition)s) WHERE characterid = %(characterid)s AND typeid = %(typeid)s',
-                    data)
+            c.execute('UPDATE character_skills SET (training, starttime, endtime, queueposition, queuelevel) = \
+                    (TRUE, %(starttime)s, %(endtime)s, %(queueposition)s, %(level)s) \
+                    WHERE characterid = %(characterid)s AND typeid = %(typeid)s', data)
         conn.commit()
 
+
+def get_skill_queue(characterid):
+    with _cursor(conn) as c:
+        r = query(c, 'SELECT typeid, level, starttime, endtime, queueposition \
+                FROM character_skills WHERE characterid = %s AND training \
+                ORDER BY queueposition', (characterid,))
+        return list(r)
+
+
+def create_plan(userid, characterid, name, description):
+    with _cursor(conn) as c:
+        c.execute('INSERT INTO plans (planid, userid, characterid, name, description, created) \
+                VALUES (DEFAULT, %s, %s, %s, %s, CURRENT_TIMESTAMP)',
+                (userid, characterid, name, description))
+        r = query_one(c, "SELECT CURRVAL('plans_planid_seq')", None)
+        conn.commit()
+    return r.currval
+
+
+def get_plans(userid, characterid):
+    with _cursor(conn) as c:
+        r = query(c, 'SELECT planid, name, description FROM plans WHERE userid = %s AND characterid = %s', 
+                (userid, characterid))
+        return list(r)
+
+
+def insert_plan_entries(planid, items):
+    with _cursor(conn) as c:
+        c.execute('INSERT INTO plan_entries (planid, typeid, level, sprequired, priority, sort) \
+                VALUES (%(planid)s, %(typeid)s, %(level)s, %(sprequired)s, %(priority)s, %(sort)s)',
+                items)
+        conn.commit()
+
+
+def insert_plan_entry(planid, typeid, level, sprequired, priority, sort, meta=None):
+    with _cursor(conn) as c:
+        c.execute('INSERT INTO plan_entries (planid, typeid, level, sprequired, priority, sort) \
+                VALUES (%s, %s, %s, %s, %s, %s)', (planid, typeid, level, sprequired, priority, sort))
+        conn.commit()
+
+
+def get_plan_entries(planid):
+    with _cursor(conn) as c:
+        r = query(c, 'SELECT * FROM plan_entries WHERE planid = %s', (planid,))
+        return list(r)
 
 
 # Convenience for debugging as psycopg2 likes putting the transaction 
@@ -162,6 +228,7 @@ def rollback():
 class UserError(Exception):
     def __init__(self, message):
             self.message = message
+
 
 # Convert the database result from a dict to attributes, because r.value > r['value'] 
 class Row:

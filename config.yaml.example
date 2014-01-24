@@ -1,0 +1,11 @@
+web:
+    port: 8888
+    host: 'localhost'
+    cookie_secret: 'sadjsadkfjl'
+
+db:
+    host: localhost
+    user: eveskill
+    port: 5432
+    password: eveskill
+    database: eveskill
