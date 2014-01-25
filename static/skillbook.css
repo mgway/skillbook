@@ -1,0 +1,36 @@
+body {
+	margin: 0;
+	background-color: #F2F3F5;
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+#footer {
+	clear: both;
+	position: fixed;
+	bottom: 0;
+	text-align: center;
+	color: #999;
+	width: 100%;
+	margin-bottom: 1em;
+	font-size: smaller;
+}
+
+.centered {
+	margin: auto;
+	position: absolute;
+	top: 0; left: 0; bottom: 0; right: 0;
+}
+
+.error {
+	color: #842107;
+}
+
+small {
+	color: #999;
+}
+
+a, a:visited {
+	color: #1ac;
+	text-decoration: none;
+}
+

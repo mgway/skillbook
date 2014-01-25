@@ -49,6 +49,12 @@ def __hash(password):
     return hashed, binascii.hexlify(salt)
 
 
+def username_available(username):
+    with _cursor(conn) as c:
+        r = query_one(c, 'SELECT username FROM users WHERE username = %s LIMIT 1', (username,))
+    return r is None
+
+
 def check_login(username, password):
     with _cursor(conn) as c:
         r = query_one(c, 'SELECT id, password, salt FROM users WHERE username = %s', (username,))
@@ -65,7 +71,9 @@ def create_account(username, password):
     with _cursor(conn) as c:
         c.execute('INSERT INTO users (id, username, password, salt, created) \
                 VALUES (DEFAULT, %s, %s, %s, CURRENT_TIMESTAMP)', (username, hashed, salt))
+        r = query_one(c, "SELECT CURRVAL('users_id_seq')", None)
         conn.commit()
+    return r.currval
 
 
 def add_key(user, key_id, key_code, key_mask, characters):

@@ -1,14 +1,21 @@
 <!DOCTYPE html>
 <html>
 	<head>
-        <title>skillbook</title>
-        <link rel="icon" type="image/png" href="/static/img/favicon.png">
-        <script src="//ajax.googleapis.com/ajax/libs/mootools/1.4.5/mootools.js"></script>
-        {% block js %}{% end %}
-        {% block css %}{% end %}
+		<title>skillbook</title>
+		<link rel="icon" type="image/png" href="/static/img/favicon.png">
+		<script src="//ajax.googleapis.com/ajax/libs/mootools/1.4.5/mootools.js"></script>
+		<script src="/static/mootools-more-1.4.0.1.js"></script>
+		<link rel="stylesheet" type "text/css" href="/static/skillbook.css" />
+		{% block js %}{% end %}
+		{% block css %}{% end %}
 	</head>
 
 	<body>
-        {% block main %}{% end %}
+		{% block main %}{% end %}
+
+		<div id="footer">
+			&copy; 2014 skillbook developers. EVE Online is a registered trademark of CCP Games hf. 
+			skillbook is not affiliated with or endorsed by CCP Games.
+		</div>
 	</body>
 </html>

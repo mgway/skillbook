@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block main %}
+	<div style="width: 35%; margin: auto; min-width: 300px; height: 25%;" class="centered">
+		<h1>skillbook</h1>
+		<p>The next-generation tool for skill monitoring &amp; planning in EVE Online<p>
+		<p><a href="#" id="loginLink">login</a> | <a href="#" id="registerLink">register</a> </p>
+
+		<div id="login" style="display: none">
+			<small class="error">{{ error }}</small>
+			<form action="/login" method="POST">
+				<input type="text" name="username" placeholder="username"></input> 
+				<input type="password" name= "password" placeholder="password"></input> 
+				<input type="submit" value="login"></input>
+				{% module xsrf_form_html() %}
+			</form>
+			<small>This isn't (or shouldn't be) the same as your EVE username and password</small>
+		</div>
+
+		<div id="register" style="display: none">
+			<small class="error">{{ error }}</small>
+			<form action="/register" method="POST">
+				<input type="text" name="username" placeholder="username"></input> 
+				<input type="password" name= "password" placeholder="password"></input> 
+				<input type="password" name= "password_rep" placeholder="password again"></input> 
+				<input type="submit" value="register"></input>
+				{% module xsrf_form_html() %}
+			</form>
+			<small>Even though passwords are encrypted, please refrain
+				from using your EVE Online password</small>
+		</div>
+	</div>
+
+<script type="text/javascript">
+	$('loginLink').addEvent('click', function() { $('register').hide(); $('login').toggle() });
+	$('registerLink').addEvent('click', function() { $('login').hide(); $('register').toggle() });
+	if(document.URL.contains('activity=login')) { $('login').show();}
+	if(document.URL.contains('activity=register')) { $('register').show();}
+</script>
+{% end %}
+

@@ -8,7 +8,6 @@ def update_characters_for_user(userid):
         db.save_character_sheet(sheet)
         db.save_skill_queue(row.characterid, queue.skillqueue)
 
-
 def get_character_sheet(userid, characterid):
     data = db.get_character_for_user(userid, characterid)
     return db.get_character_sheet(characterid)
