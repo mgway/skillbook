@@ -1,21 +1,37 @@
 <!DOCTYPE html>
-<html>
+<html class="uk-height-1-1">
 	<head>
 		<title>skillbook</title>
-		<link rel="icon" type="image/png" href="/static/img/favicon.png">
+		<link rel="icon" type="image/png" href="/static/favicon.png">
 		<script src="//ajax.googleapis.com/ajax/libs/mootools/1.4.5/mootools.js"></script>
 		<script src="/static/mootools-more-1.4.0.1.js"></script>
-		<link rel="stylesheet" type "text/css" href="/static/skillbook.css" />
+		<link rel="stylesheet" type="text/css" href="/static/uikit.css" />
+		<link rel="stylesheet" type="text/css" href="/static/uikit.almost-flat.css" />
+		<link rel="stylesheet" type="text/css" href="/static/skillbook.css" />
 		{% block js %}{% end %}
 		{% block css %}{% end %}
 	</head>
 
-	<body>
+	<body class="uk-height-1-1">
+		{% if current_user %}
+		<nav class="uk-navbar uk-navbar-attached">
+			<div class="uk-container uk-container-center">
+				<a href="#fixme" class="uk-navbar-brand">skillbook</a>
+				<ul class="uk-navbar-nav uk-navbar-flip">
+					<li><a>characters</a></li>
+					<li><a>plans</a></li>
+					<li><a href="/settings">settings</a></li>
+					<li><a href="/logout">logout</a></li>
+				</ul>
+			</div>
+		</nav>
+		{% end %}
+
 		{% block main %}{% end %}
 
 		<div id="footer">
-			&copy; 2014 skillbook developers. EVE Online is a registered trademark of CCP Games hf. 
-			skillbook is not affiliated with or endorsed by CCP Games.
+			&copy; 2014 skillbook developers. All EVE Online related materials are property of CCP Games hf. 
+			<a href="#">about</a> | <a href="#">legal</a>
 		</div>
 	</body>
 </html>

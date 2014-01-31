@@ -15,3 +15,8 @@ def get_character_sheet(userid, characterid):
 def get_skill_queue(userid, characterid):
     data = db.get_character_for_user(userid, characterid)
     return db.get_skill_queue(characterid)
+
+def add_key(userid, keyid, vcode):
+    mask, characters = eveapi.key_info(keyid, vcode)
+    print(characters.key)
+    db.add_key(userid, keyid, vcode, mask, characters.key.characters.rows)

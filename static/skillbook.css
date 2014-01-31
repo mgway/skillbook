@@ -1,9 +1,3 @@
-body {
-	margin: 0;
-	background-color: #F2F3F5;
-	font-family: Arial, Helvetica, sans-serif;
-}
-
 #footer {
 	clear: both;
 	position: fixed;
@@ -11,14 +5,23 @@ body {
 	text-align: center;
 	color: #999;
 	width: 100%;
-	margin-bottom: 1em;
+	padding: 3px;
 	font-size: smaller;
+	background-color: #F5F5F5;
+	border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-.centered {
-	margin: auto;
-	position: absolute;
-	top: 0; left: 0; bottom: 0; right: 0;
+.uk-navbar-brand {
+	color: #00a8e6;
+}
+
+.brand {
+	font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+	color: #00a8e6;
+}
+
+#footer a {
+	color: #777;
 }
 
 .error {
@@ -27,10 +30,5 @@ body {
 
 small {
 	color: #999;
-}
-
-a, a:visited {
-	color: #1ac;
-	text-decoration: none;
 }
 

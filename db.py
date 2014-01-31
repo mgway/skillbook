@@ -66,6 +66,34 @@ def check_login(username, password):
         return r.id
 
 
+def change_password(userid, password, new_password):
+    with _cursor(conn) as c:
+        r = query_one(c, 'SELECT password, salt FROM users WHERE id = %s', (userid,))
+        salt = binascii.unhexlify(bytes(r.salt))
+        h = hmac.new(salt, password.encode('utf-8'), hashlib.sha256)
+        if h.hexdigest() == r.password:
+            hashed, newsalt = __hash(new_password)
+            c.execute('UPDATE users SET (password, salt) = \
+                (%s, %s) WHERE id = %s', (hashed, newsalt, userid))
+            conn.commit()
+        else:
+            raise UserError("Incorrect current password")
+
+
+def change_preferences(userid, mail, newsletter):
+    with _cursor(conn) as c:
+        c.execute('UPDATE users SET email = %s, newsletter = %s WHERE id = %s', 
+                (mail, newsletter, userid))
+        conn.commit()
+
+
+def get_preferences(userid):
+    with _cursor(conn) as c:
+        r = query_one(c, 'SELECT email, valid_email, newsletter FROM users WHERE id = %s', 
+                (userid,))
+        return r
+
+
 def create_account(username, password):
     hashed, salt = __hash(password)
     with _cursor(conn) as c:
@@ -81,11 +109,14 @@ def add_key(user, key_id, key_code, key_mask, characters):
 
         # Add all characters in this key
         for char in characters:
-            c.execute('INSERT INTO characters (characterid, name) VALUES (%s, %s)', 
-                (char.characterid, char.charactername))
+            try:
+                c.execute('INSERT INTO characters (characterid, name) VALUES (%s, %s)', 
+                    (char.characterid, char.charactername))
+            except psycopg2.IntegrityError:
+                conn.rollback()
             c.execute('INSERT INTO keys (userid, keyid, vcode, keymask, characterid) VALUES \
                     (%s, %s, %s, %s, %s)', (user, key_id, key_code, key_mask, char.characterid))
-        conn.commit()
+            conn.commit()
 
 
 def remove_key(user, keyid):
@@ -98,6 +129,14 @@ def get_characters_for_user(user):
     with _cursor(conn) as c:
         r = query(c, 'SELECT name, char.characterid, keyid, vcode, keymask FROM keys INNER JOIN characters char \
                 ON char.characterid = keys.characterid WHERE userid = %s', (user,))
+        return list(r)
+
+
+def get_keys_for_user(user):
+    with _cursor(conn) as c:
+        r = query(c, 'SELECT array_agg(char.characterid) as ids, array_agg(char.name) as names, keyid, keymask \
+                FROM keys INNER JOIN characters char ON char.characterid = keys.characterid \
+                WHERE userid = %s GROUP BY keyid, keymask', (user,))
         return list(r)
 
 

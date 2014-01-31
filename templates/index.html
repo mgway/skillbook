@@ -1,17 +1,18 @@
 {% extends "base.html" %}
 
 {% block main %}
-	<div style="width: 35%; margin: auto; min-width: 300px; height: 25%;" class="centered">
-		<h1>skillbook</h1>
+	<div class="uk-vertical-align uk-height-1-1 uk-text-center">
+		<div class="uk-vertical-align-middle uk-container-center">
+		<h1 class="brand">skillbook</h1>
 		<p>The next-generation tool for skill monitoring &amp; planning in EVE Online<p>
 		<p><a href="#" id="loginLink">login</a> | <a href="#" id="registerLink">register</a> </p>
 
 		<div id="login" style="display: none">
 			<small class="error">{{ error }}</small>
-			<form action="/login" method="POST">
-				<input type="text" name="username" placeholder="username"></input> 
+			<form action="/login" method="POST" class="uk-form">
+				<input type="text" name="username" id="login_username" placeholder="username"></input> 
 				<input type="password" name= "password" placeholder="password"></input> 
-				<input type="submit" value="login"></input>
+				<input type="submit" value="login" class="uk-button uk-button-primary"></input>
 				{% module xsrf_form_html() %}
 			</form>
 			<small>This isn't (or shouldn't be) the same as your EVE username and password</small>
@@ -19,23 +20,36 @@
 
 		<div id="register" style="display: none">
 			<small class="error">{{ error }}</small>
-			<form action="/register" method="POST">
-				<input type="text" name="username" placeholder="username"></input> 
+			<form action="/register" method="POST" class="uk-form">
+				<fieldset data-uk-margin>
+				<input type="text" name="username" id="reg_username" placeholder="username"></input> 
 				<input type="password" name= "password" placeholder="password"></input> 
 				<input type="password" name= "password_rep" placeholder="password again"></input> 
-				<input type="submit" value="register"></input>
+				<input type="submit" value="register" class="uk-button uk-button-primary"></input>
 				{% module xsrf_form_html() %}
+				</fieldset>
 			</form>
 			<small>Even though passwords are encrypted, please refrain
 				from using your EVE Online password</small>
 		</div>
 	</div>
+	</div>
 
 <script type="text/javascript">
-	$('loginLink').addEvent('click', function() { $('register').hide(); $('login').toggle() });
-	$('registerLink').addEvent('click', function() { $('login').hide(); $('register').toggle() });
-	if(document.URL.contains('activity=login')) { $('login').show();}
-	if(document.URL.contains('activity=register')) { $('register').show();}
+	var showLogin = function() {
+		$('register').hide(); 
+		$('login').toggle();
+		$('login_username').focus();
+	}
+	var showRegistration = function() {
+		$('login').hide(); 
+		$('register').toggle();
+		$('reg_username').focus();
+	}
+	$('loginLink').addEvent('click', function() { showLogin() });
+	$('registerLink').addEvent('click', function() { showRegistration() });
+	if(document.URL.contains('activity=login')) { showLogin() }
+	if(document.URL.contains('activity=register')) { showRegistration()}
 </script>
 {% end %}
 

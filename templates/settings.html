@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block main %}
+	<div id="frame" style="padding-top: 10px; width: 50%; margin: auto;">
+		<h2>Account Settings</h2>
+		<div class="uk-grid">
+			<div class="uk-width-medium-1-2">
+        		<div class="uk-panel uk-panel-box">
+					<h3>Preferences &amp; Stuff</h3>
+					<form class="uk-form" method="POST" action="/settings/prefs">
+					<fieldset>
+						<div class="uk-form-row">
+							<input type="email" name="email" placeholder="mail" value="{{prefs.email}}" class="uk-width-2-3"/>
+							<small>{% if not prefs.valid_email %}not confirmed{% end %}</small>
+						</div>
+						<div class="uk-form-row">
+							<label>
+								<input type="checkbox" name="newsletter" {% if prefs.newsletter %}checked{% end %}/> 
+								Send me mail about new features
+							</label>
+						</div>
+						<div class="uk-form-row">
+							<input class="uk-button uk-button-primary" type="submit" value="update"></input>
+						</div>
+						{% module xsrf_form_html() %}
+					</fieldset>
+					</form>
+				</div>
+    		</div>
+    		<div class="uk-width-medium-1-2">
+        		<div class="uk-panel uk-panel-box">
+					<h3>Password Management</h3>
+					<small class="error">{% if context == "password" %}{{ error }}{% end %}</small>
+					<form class="uk-form" method="POST" action="/settings/password">
+					<fieldset>
+						<div class="uk-form-row">
+							<input type="password" name="current_password" placeholder="current password" class="uk-width-2-3"/>
+						</div>
+						<div class="uk-form-row">
+							<input type="password" name="password" placeholder="new password" class="uk-width-2-3"/>
+						</div>
+						<div class="uk-form-row">
+							<input type="password" name="password_dup" placeholder="new password again" class="uk-width-2-3"/>
+						</div>
+						<div class="uk-form-row">
+							<input class="uk-button uk-button-primary" type="submit" value="change"></input>
+						</div>
+						{% module xsrf_form_html() %}
+					</fieldset>
+					</form>
+				</div>
+    		</div>
+
+			<div class="uk-width-1-1">
+			<h2>API Keys</h2>
+		{% for key in keys %}
+			<div class="uk-panel uk-panel-box uk-panel-box-secondary" style="margin-top: 10px;">
+				{% for char in key.ids %}
+					<img src="http://image.eveonline.com/Character/{{ char }}_64.jpg" style="float:left; padding: 2px;"/>
+				{% end %}
+				<div style="float: left; padding: 5px;"> 
+					Characters: {{ ', '.join(key.names) }} <br />
+					Key ID: {{ key.keyid }}<br />
+					Key Mask: {{ key.keymask }}
+				</div>
+			</div>
+		{% end %}
+			<div class="uk-panel uk-panel-box uk-panel-box-secondary" style="margin-top: 10px;">
+				<img src="http://image.eveonline.com/Character/0_64.jpg" style="float:left; padding: 2px;"/>
+				<div style="float: left; padding: 5px;"> 
+					<h4>Add an API key <small class="error">{% if context == "key" %}{{ error }}{% end %}</small></h4>
+					<form method="POST" action="/settings/keys" class="uk-form">
+						<input type="text" name="keyid" size="8" class="uk-form-small" placeholder="Key ID"></input>
+						<input type="text" name="vcode" size="35" class="uk-form-small" placeholder="Verification Code"></input>
+						<input type="submit" value="add" class="uk-button uk-button-small"></input>
+						{% module xsrf_form_html() %}
+					</form>
+				</div>
+			</div>
+			</div>
+		</div>
+	</div>
+{% end %}

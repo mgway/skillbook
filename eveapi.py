@@ -100,9 +100,11 @@ class Query:
                 setattr(self, node.name, node.value)
             cached = self.tree.find('./cachedUntil').text
             self.cached_until = datetime.strptime(cached, '%Y-%m-%d %H:%M:%S')
-        else:
+        elif 400 <= result.status_code < 500:
             print(result.text)
-            raise HttpException("The API returned status code " + str(result.status_code))
+            self.tree = ET.fromstring(result.text)
+            message = self.tree.find('error').text
+            raise APIException("API Error: " + message)
 
 
 class Rowset:
