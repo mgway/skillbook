@@ -28,6 +28,10 @@
 	color: #842107;
 }
 
+#frame {
+	padding-top: 20px;
+}
+
 small {
 	color: #999;
 }

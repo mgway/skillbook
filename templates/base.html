@@ -8,6 +8,8 @@
 		<link rel="stylesheet" type="text/css" href="/static/uikit.css" />
 		<link rel="stylesheet" type="text/css" href="/static/uikit.almost-flat.css" />
 		<link rel="stylesheet" type="text/css" href="/static/skillbook.css" />
+		<script>window.skillbook = {}</script>
+		<script type='text/javascript' src='/static/common.js'></script>
 		{% block js %}{% end %}
 		{% block css %}{% end %}
 	</head>
@@ -18,7 +20,7 @@
 			<div class="uk-container uk-container-center">
 				<a href="#fixme" class="uk-navbar-brand">skillbook</a>
 				<ul class="uk-navbar-nav uk-navbar-flip">
-					<li><a>characters</a></li>
+					<li><a href="/skills">skills</a></li>
 					<li><a>plans</a></li>
 					<li><a href="/settings">settings</a></li>
 					<li><a href="/logout">logout</a></li>

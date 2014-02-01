@@ -2,6 +2,7 @@ import tornado.ioloop
 import tornado.escape
 import tornado.web
 import os
+import simplejson 
 
 import db
 import api
@@ -17,10 +18,7 @@ class BaseHandler(tornado.web.RequestHandler):
 
 class MainHandler(BaseHandler):
     def get(self):
-        try:
-            error = self.get_argument("error")
-        except:
-            error = ""
+        error = self.get_argument("error", "")
         self.render('index.html', error=error)
 
 
@@ -34,7 +32,7 @@ class LoginHandler(BaseHandler):
         if user_id is not None:
             json = tornado.escape.json_encode({'userid': user_id})
             self.set_secure_cookie('skillbook_user', str(user_id), expires_days=90)
-            self.redirect('/home')
+            self.redirect('/skills')
         else:
             error = u'?activity=login&error=' + tornado.escape.url_escape('Incorrect username or password')
             self.redirect('/' + error)
@@ -64,29 +62,25 @@ class RegistrationHandler(BaseHandler):
             if user_id is not None:
                 json = tornado.escape.json_encode({'userid': user_id})
                 self.set_secure_cookie('skillbook_user', str(user_id), expires_days=90)
-                self.redirect('/home')
+                self.redirect('/settings')
             else:
                 self.redirect('/')
 
 
-class HomeHandler(BaseHandler):
+class SkillsHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
-        self.render('userhome.html')
+        self.render('skills.html')
 
 
 class SettingsHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
         userid = self.get_current_user()
-        keys = db.get_keys_for_user(userid)
+        keys = db.get_keys(userid)
         prefs = db.get_preferences(userid)
-        try:
-            error = self.get_argument("error")
-            context = self.get_argument("context")
-        except:
-            error = ""
-            context = ""
+        error = self.get_argument("error", "")
+        context = self.get_argument("context", "")
         self.render('settings.html', keys=keys, prefs=prefs,
                 error=error, context=context)
 
@@ -142,6 +136,44 @@ class SettingsPasswordHandler(BaseHandler):
                 self.redirect('/settings' + error)
 
 
+class CharacterAjaxHandler(BaseHandler):
+    def get(self, command):
+        userid = self.get_current_user()
+        args = self.get_argument('args', "")
+
+        try:
+            if command == 'characters':
+                characters = api.get_characters(userid)
+                self.write_message(characters)
+            elif command == 'sheet':
+                sheet = api.get_character_sheet(userid, args)
+                self.write_message(sheet)
+            elif command == 'skills':
+                skills = api.get_character_skills(userid, args)
+                self.write_message(skills)
+            elif command == 'queue':
+                skills = api.get_character_queue(userid, args)
+                self.write_message(skills)
+            else:
+                print('unhandled command: ' + str(command))
+
+        except api.SkillbookException as e:
+            self.set_status(403, e.message)
+            self.write_message({'error': e.message})
+
+
+    def write_message(self, message):
+        def json_handler(obj):
+            if hasattr(obj, 'isoformat'):
+                return obj.isoformat()
+            else:
+                raise TypeError('Object of type %s with value of %s is not JSON serializable' % (type(obj), repr(obj)))
+        
+        self.set_header('Content-Type', 'application/json')
+        self.finish(simplejson.dumps(message, use_decimal=True, default=json_handler))
+
+
+
 if __name__ == "__main__":
     application = tornado.web.Application(
         handlers = [
@@ -149,7 +181,8 @@ if __name__ == "__main__":
             (r'/login', LoginHandler),
             (r'/logout', LogoutHandler),
             (r'/register', RegistrationHandler),
-            (r'/home', HomeHandler),
+            (r'/skills', SkillsHandler),
+            (r'/api/(.+)', CharacterAjaxHandler),
             (r'/settings', SettingsHandler),
             (r'/settings/keys', SettingsKeyHandler),
             (r'/settings/prefs', SettingsPrefsHandler),

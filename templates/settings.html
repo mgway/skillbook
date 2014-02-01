@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block main %}
-	<div id="frame" style="padding-top: 10px; width: 50%; margin: auto;">
+	<div id="frame" class="uk-container-center uk-width-1-2">
 		<h2>Account Settings</h2>
 		<div class="uk-grid">
 			<div class="uk-width-medium-1-2">
@@ -66,7 +66,7 @@
 			</div>
 		{% end %}
 			<div class="uk-panel uk-panel-box uk-panel-box-secondary" style="margin-top: 10px;">
-				<img src="http://image.eveonline.com/Character/0_64.jpg" style="float:left; padding: 2px;"/>
+				<img src="http://image.eveonline.com/Character/1_64.jpg" style="float:left; padding: 2px;"/>
 				<div style="float: left; padding: 5px;"> 
 					<h4>Add an API key <small class="error">{% if context == "key" %}{{ error }}{% end %}</small></h4>
 					<form method="POST" action="/settings/keys" class="uk-form">

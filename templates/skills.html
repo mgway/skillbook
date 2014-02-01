@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block main %}
+	<div id="frame" class="uk-container-center uk-width-1-2">
+		<h2 id="pagetitle">Characters</h2>
+		<div class="uk-grid" id="pagegrid">
+			<!-- Things go here -->
+		</div>
+	</div>
+
+<script type='text/javascript'>
+	skillbook.api('characters', function(characters) {
+		var grid = $('pagegrid');
+		characters.each(function(char) {
+			grid.grab(character_row(char));
+		});
+
+		function character_row(char) {
+			var row = new Element('div', {'class': 'uk-width-1-2', 'style':'padding-bottom: 10px'});
+			var article = new Element('article', {'class': 'uk-comment'});
+			var header = new Element('header', {'class': 'uk-comment-header'});
+			var data = char['corporationname'] + "<br />" + skillbook.format_isk(char['balance']) + "<br />skill queue completes in xxyyzz"
+			header.adopt(
+				skillbook.portrait(char['characterid'], char['name'], 'Character', 128, 'uk-comment-avatar'), 
+				new Element('h4', {'html': char['name'], 'class': 'uk-comment-title'}),
+				new Element('div', {'html': data, 'class': 'uk-comment-meta'})
+			);
+			article.grab(header);
+			row.grab(article);
+			row.addEvent('click', function(e) {
+				alert("TODO: showing skills for " + char['name']);
+			});
+			return row;
+		}
+	});
+</script>
+{% end %}
+

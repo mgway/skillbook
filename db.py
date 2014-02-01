@@ -125,14 +125,22 @@ def remove_key(user, keyid):
         conn.commit()
 
 
-def get_characters_for_user(user):
+def get_characters(user):
     with _cursor(conn) as c:
         r = query(c, 'SELECT name, char.characterid, keyid, vcode, keymask FROM keys INNER JOIN characters char \
                 ON char.characterid = keys.characterid WHERE userid = %s', (user,))
         return list(r)
 
 
-def get_keys_for_user(user):
+def get_character_briefs(user):
+    # TODO: Include skill queue completion time
+    with _cursor(conn) as c:
+        r = query(c, 'SELECT name, char.characterid, char.corporationname, balance FROM keys \
+                INNER JOIN characters char ON char.characterid = keys.characterid WHERE userid = %s', (user,))
+        return list(r)
+
+
+def get_keys(user):
     with _cursor(conn) as c:
         r = query(c, 'SELECT array_agg(char.characterid) as ids, array_agg(char.name) as names, keyid, keymask \
                 FROM keys INNER JOIN characters char ON char.characterid = keys.characterid \
@@ -140,9 +148,9 @@ def get_keys_for_user(user):
         return list(r)
 
 
-def get_character_for_user(user, characterid):
+def get_character(user, characterid):
     with _cursor(conn) as c:
-        r = query(c, 'SELECT characterid, keyid, vcode, keymask FROM keys WHERE userid = %s \
+        r = query_one(c, 'SELECT characterid, keyid, vcode, keymask FROM keys WHERE userid = %s \
                 AND characterid = %s', (user, characterid))
         return r
 
@@ -188,14 +196,14 @@ def save_character_sheet(character):
                     del(skills[typeid])
                 else:
                     # Skill was trained, update it
-                    u.execute('UPDATE character_skills SET (level, skillpoints) = (%(level)s, %(skillpoints)s) \
+                    u.execute('UPDATE character_skills SET (level, skillpoints, updatedat) = (%(level)s, %(skillpoints)s, CURRENT_TIMESTAMP) \
                             WHERE characterid = %(characterid)s AND typeid = %(typeid)s', skills[typeid])
                     del(skills[typeid])
 
             # Our set of skills from the api now contains only skills that are new
             for skill in skills.values():
-                u.execute('INSERT INTO character_skills (characterid, typeid, level, skillpoints) VALUES \
-                        (%(characterid)s, %(typeid)s, %(level)s, %(skillpoints)s)', skill)
+                u.execute('INSERT INTO character_skills (characterid, typeid, level, skillpoints, updatedat) VALUES \
+                        (%(characterid)s, %(typeid)s, %(level)s, %(skillpoints)s, CURRENT_TIMESTAMP)', skill)
 
             conn.commit()
 
@@ -206,6 +214,13 @@ def get_character_sheet(characterid):
         return r
 
 
+def get_character_skills(characterid):
+    with _cursor(conn) as c:
+        r = query(c, 'SELECT typeid, level, skillpoints, training, updatedat FROM character_skills \
+                WHERE characterid = %s', (characterid,)) 
+        return list(r)
+
+
 def save_skill_queue(characterid, queue):
     with _cursor(conn) as c:
         # Remove current training information
@@ -214,15 +229,15 @@ def save_skill_queue(characterid, queue):
         for skill in queue.rows:
             data = skill.__dict__
             data['characterid'] = characterid
-            c.execute('UPDATE character_skills SET (training, starttime, endtime, queueposition, queuelevel) = \
-                    (TRUE, %(starttime)s, %(endtime)s, %(queueposition)s, %(level)s) \
+            c.execute('UPDATE character_skills SET (training, starttime, endtime, queueposition, queuelevel, updatedat) = \
+                    (TRUE, %(starttime)s, %(endtime)s, %(queueposition)s, %(level)s, CURRENT_TIMESTAMP) \
                     WHERE characterid = %(characterid)s AND typeid = %(typeid)s', data)
         conn.commit()
 
 
 def get_skill_queue(characterid):
     with _cursor(conn) as c:
-        r = query(c, 'SELECT typeid, level, starttime, endtime, queueposition \
+        r = query(c, 'SELECT typeid, level, starttime, endtime, queueposition, skillpoints, updatedat \
                 FROM character_skills WHERE characterid = %s AND training \
                 ORDER BY queueposition', (characterid,))
         return list(r)
