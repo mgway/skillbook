@@ -1,0 +1,7 @@
+PyYAML==3.10
+ipython==1.1.0
+psycopg2==2.5.2
+requests==2.2.0
+simplejson==3.3.2
+tornado==3.1.1
+
