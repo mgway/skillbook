@@ -9,6 +9,12 @@ def main():
     mysql_cursor = mysql.cursor(oursql.DictCursor)
     pg_cursor = postgres.cursor()
 
+    # Get item groups
+    mysql_cursor.execute('SELECT groupID, groupName, categoryID from `invGroups`')
+    groups = mysql_cursor.fetchall()
+    pg_cursor.executemany("INSERT INTO groups (groupid, name, categoryid) VALUES (%(groupID)s, %(groupName)s, %(categoryID)s)", groups)
+    postgres.commit()
+
     mysql_cursor.execute('SELECT * FROM `invTypes` WHERE `groupID` IN (SELECT groupID FROM `invGroups` WHERE `categoryID` = 16 AND `published` = 1) and `published` = 1')
     skills = mysql_cursor.fetchall()
 
