@@ -135,7 +135,7 @@ def get_characters(user):
 def get_character_briefs(user):
     # TODO: Include skill queue completion time
     with _cursor(conn) as c:
-        r = query(c, 'SELECT name, char.characterid, char.corporationname, balance FROM keys \
+        r = query(c, 'SELECT name, char.characterid, char.corporationname, balance, training_end FROM keys \
                 INNER JOIN characters char ON char.characterid = keys.characterid WHERE userid = %s', (user,))
         return list(r)
 
@@ -191,18 +191,17 @@ def save_character_sheet(character):
             for skill in q:
                 # We want a string key, not int
                 typeid = str(skill.typeid)
-                if skill.skillpoints == int(skills[typeid]['skillpoints']):
-                    # Delete items that are unchanged
-                    del(skills[typeid])
-                else:
+                if skill.skillpoints != int(skills[typeid]['skillpoints']):
                     # Skill was trained, update it
-                    u.execute('UPDATE character_skills SET (level, skillpoints, updatedat) = (%(level)s, %(skillpoints)s, CURRENT_TIMESTAMP) \
+                    u.execute('UPDATE character_skills SET (level, skillpoints, updated) = \
+                            (%(level)s, %(skillpoints)s, CURRENT_TIMESTAMP) \
                             WHERE characterid = %(characterid)s AND typeid = %(typeid)s', skills[typeid])
-                    del(skills[typeid])
+                # Remove the skill from our list since we've handled the update
+                del(skills[typeid])
 
             # Our set of skills from the api now contains only skills that are new
             for skill in skills.values():
-                u.execute('INSERT INTO character_skills (characterid, typeid, level, skillpoints, updatedat) VALUES \
+                u.execute('INSERT INTO character_skills (characterid, typeid, level, skillpoints, updated) VALUES \
                         (%(characterid)s, %(typeid)s, %(level)s, %(skillpoints)s, CURRENT_TIMESTAMP)', skill)
 
             conn.commit()
@@ -216,7 +215,7 @@ def get_character_sheet(characterid):
 
 def get_character_skills(characterid):
     with _cursor(conn) as c:
-        r = query(c, 'SELECT typeid, level, skillpoints, training, updatedat FROM character_skills \
+        r = query(c, 'SELECT typeid, level, skillpoints, training, updated FROM character_skills \
                 WHERE characterid = %s', (characterid,)) 
         return list(r)
 
@@ -224,25 +223,37 @@ def get_character_skills(characterid):
 def save_skill_queue(characterid, queue):
     with _cursor(conn) as c:
         # Remove current training information
-        c.execute('UPDATE character_skills SET (training, starttime, endtime, queueposition) = \
-                (null, null, null, null) WHERE characterid = %s AND training', (characterid,))
+        c.execute('DELETE from character_queue WHERE characterid = %s', (characterid,))
+
         for skill in queue.rows:
             data = skill.__dict__
             data['characterid'] = characterid
-            c.execute('UPDATE character_skills SET (training, starttime, endtime, queueposition, queuelevel, updatedat) = \
-                    (TRUE, %(starttime)s, %(endtime)s, %(queueposition)s, %(level)s, CURRENT_TIMESTAMP) \
-                    WHERE characterid = %(characterid)s AND typeid = %(typeid)s', data)
+            c.execute('INSERT INTO character_queue (characterid, typeid, starttime, endtime, \
+                    position, level, startsp, endsp, updated) VALUES (%(characterid)s, %(typeid)s, %(starttime)s, \
+                    %(endtime)s, %(queueposition)s, %(level)s, %(startsp)s, %(endsp)s, CURRENT_TIMESTAMP)', data)
+        if queue.rows:
+            c.execute('UPDATE characters SET training_end = %s WHERE characterid = %s', 
+                    (queue.rows[-1].endtime, characterid))
         conn.commit()
 
 
 def get_skill_queue(characterid):
     with _cursor(conn) as c:
-        r = query(c, 'SELECT typeid, level, starttime, endtime, queueposition, skillpoints, updatedat \
-                FROM character_skills WHERE characterid = %s AND training \
-                ORDER BY queueposition', (characterid,))
+        r = query(c, 'SELECT typeid, level, starttime, endtime, position, skillpoints, updated \
+                FROM character_queue WHERE characterid = %s ORDER BY queueposition', (characterid,))
         return list(r)
 
 
+# -- Static data
+def get_skills():
+    with _cursor(conn) as c:
+        r = query(c, 'SELECT typeid, skills.groupid, groups.name groupname, description, skills.name, \
+                baseprice, timeconstant, primaryattr, secondaryattr FROM skills \
+                INNER JOIN groups ON skills.groupid = groups.groupid', (None,))
+        return list(r)
+
+
+# -- Plans
 def create_plan(userid, characterid, name, description):
     with _cursor(conn) as c:
         c.execute('INSERT INTO plans (planid, userid, characterid, name, description, created) \

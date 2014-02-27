@@ -136,10 +136,22 @@ class SettingsPasswordHandler(BaseHandler):
                 self.redirect('/settings' + error)
 
 
-class CharacterAjaxHandler(BaseHandler):
+class AjaxHandler(BaseHandler):
+    def write_message(self, message):
+        def json_handler(obj):
+            if hasattr(obj, 'isoformat'):
+                return obj.isoformat()
+            else:
+                raise TypeError('Object of type %s with value of %s is not JSON serializable' % (type(obj), repr(obj)))
+        
+        self.set_header('Content-Type', 'application/json')
+        self.finish(simplejson.dumps(message, use_decimal=True, default=json_handler))
+
+
+class DynamicAjaxHandler(AjaxHandler):
     def get(self, command):
         userid = self.get_current_user()
-        args = self.get_argument('args', "")
+        args = self.get_argument('args', '')
 
         try:
             if command == 'characters':
@@ -162,16 +174,14 @@ class CharacterAjaxHandler(BaseHandler):
             self.write_message({'error': e.message})
 
 
-    def write_message(self, message):
-        def json_handler(obj):
-            if hasattr(obj, 'isoformat'):
-                return obj.isoformat()
-            else:
-                raise TypeError('Object of type %s with value of %s is not JSON serializable' % (type(obj), repr(obj)))
-        
-        self.set_header('Content-Type', 'application/json')
-        self.finish(simplejson.dumps(message, use_decimal=True, default=json_handler))
+class StaticAjaxHandler(AjaxHandler):
+    def get(self, command):
+        args = self.get_argument('args', '')
 
+        if command == 'skills':
+            self.write_message(api.get_skills())
+        else:
+            print('unhandled command: ' + str(command))
 
 
 if __name__ == "__main__":
@@ -182,7 +192,8 @@ if __name__ == "__main__":
             (r'/logout', LogoutHandler),
             (r'/register', RegistrationHandler),
             (r'/skills', SkillsHandler),
-            (r'/api/(.+)', CharacterAjaxHandler),
+            (r'/api/static/(.+)', StaticAjaxHandler),
+            (r'/api/(.+)', DynamicAjaxHandler),
             (r'/settings', SettingsHandler),
             (r'/settings/keys', SettingsKeyHandler),
             (r'/settings/prefs', SettingsPrefsHandler),

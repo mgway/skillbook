@@ -33,8 +33,12 @@
 				j = ((j = i.length) > 3) ? j % 3 : 0; 
 				return (j ? i.substr(0, j) + ',' : '') + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + ',')
 			   		+ ('.' + Math.abs(number - i).toFixed(2).slice(2)) + " ISK";
-			} else
+			} else {
 				return "(0 ISK)";
+			}
+		},
+		'sp_hour': function(primary, secondary) {
+			return (primary + secondary/2) * 60;
 		},
 	});
 })();

@@ -53,6 +53,14 @@ def get_character_queue(userid, characterid):
         raise SkillbookException('You do not have permission to view this character')
 
 
+def get_skills():
+    skills = db.get_skills()
+    skills_dict = dict()
+    for skill in skills:
+        skills_dict[skill.typeid] = skill.raw
+    return skills_dict
+
+
 class SkillbookException(Exception):
     def __init__(self, message):
         self.message = message
