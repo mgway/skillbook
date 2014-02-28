@@ -88,9 +88,6 @@
         if (minDiff) {
             result.push(pluralize(minDiff, 'minute'));
         }
-        if (secDiff) {
-            result.push(pluralize(secDiff, 'second'));
-        }
 
         return result.join(STRINGS.delimiter);
     };
