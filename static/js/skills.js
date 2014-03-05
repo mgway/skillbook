@@ -14,6 +14,7 @@ window.addEvent('domready', function() {
 		if(split[0] == '#character') {
 			show_character(split[1]);
 		} else {
+			list_characters();	
 		}
 	} else {
 		list_characters();
@@ -21,6 +22,13 @@ window.addEvent('domready', function() {
 
 
 	function list_characters() {
+		window.location.hash = 'characters';
+
+		// Clean up
+		$('pagegrid').empty();
+		$$('table').dispose();
+		$('pagetitle').set('text', 'Characters');
+
 		skillbook.api('characters', function(characters) {
 			var grid = $('pagegrid');
 			characters.each(function(char) {
@@ -28,7 +36,7 @@ window.addEvent('domready', function() {
 			});
 
 			function character_row(char) {
-				var row = new Element('div', {'class': 'uk-width-1-2', 'style':'padding-bottom: 10px'});
+				var row = new Element('div', {'class': 'uk-width-1-1 uk-width-medium-1-1 uk-width-large-1-2', 'style':'padding-bottom: 10px'});
 				var article = new Element('article', {'class': 'uk-comment'});
 				var header = new Element('header', {'class': 'uk-comment-header'});
 				var data = char['corporationname'] + "<br />" + skillbook.format_isk(char['balance']);
@@ -99,11 +107,15 @@ window.addEvent('domready', function() {
 
 		function display_sheet() {
 			var sheet = skillbook.cache[id];
-			$('pagetitle').set('text', sheet['name']);
 
-			var row = new Element('div', {'class': 'uk-width-1-1', 'style':'padding-bottom: 10px'});
-			var panel = new Element('div', {'class': 'uk-width-1-1'});
+			// Set up our header
+			var list_chars = new Element('a', {'text': 'Characters', 'style': 'cursor: pointer', 'class': 'uk-link-muted'});
+			var trailer = new Element('span', {'html': ' &raquo; ' + sheet.name});
+			list_chars.addEvent('click', list_characters);
+			$('pagetitle').empty().adopt(list_chars, trailer);
 
+			// Set up the character brief
+			var panel = new Element('div', {'class': 'uk-width-1-1 uk-hidden-small'});
 			var list = new Element('dl', {'class': 'uk-description-list uk-description-list-horizontal'});
             var massaged = {'Bio': sheet['bio'], 'Balance': skillbook.format_isk(sheet['balance']),
                 'Birthday': moment(sheet['birthday']).subtract('minutes', new Date().getTimezoneOffset()).format('LLL'), 
@@ -132,6 +144,7 @@ window.addEvent('domready', function() {
 
             $('sheet_Skillpoints').set('html', skillbook.format_number(total_sp));
 		}
+
 		function skill_category(skills, header) {
 			var rowtemplate = "<td colspan='2'><b>{name}</b><br />SP: {sp} ({timeconstant}x)</td><td class='right'>Level {level}</td>";
 			var headertemplate = "<tr style='cursor: pointer'><th style='width: 40%'>{h}</th><th style='width: 40%'><small>{count} skills &mdash; {sp} points</small></th><th>&nbsp;</th></tr>";
@@ -139,7 +152,7 @@ window.addEvent('domready', function() {
 			var tbody = new Element('tbody');
 			var category_sp = 0;
 
-			skills.each(function(skill) {
+			_.sortBy(skills, function(skill) { return skill.name }).each(function(skill) {
                 category_sp += skill.skillpoints
 				skill.sp = skillbook.format_number(skill.skillpoints) + '/' + 
 					skillbook.format_number(skillbook.sp_next_level(skill.level, skill.timeconstant));

@@ -23,7 +23,7 @@
 				'alt': text,
 				'width': size,
 				'height': size,
-				'class': cls,
+				'class': cls + " uk-responsive-height",
 			});
 			return img;
 		},

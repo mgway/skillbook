@@ -1,3 +1,6 @@
+body {
+	overflow-y: scroll;
+}
 #footer {
 	clear: both;
 	position: fixed;
@@ -40,6 +43,10 @@ table.skills thead tr {
 	font-size: larger;
 	color: #00a8e6;
 	background-color: rgba(196, 196, 196, 0.54);
+}
+table.uk-table-condensed td {
+	font-size: smaller;
+	padding: 4px 4px;
 }
 
 .right {
