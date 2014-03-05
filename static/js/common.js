@@ -37,8 +37,17 @@
 				return "(0 ISK)";
 			}
 		},
+		'format_number': function(number) {
+			i = parseInt(number = Math.abs(number)) + '', 
+			j = ((j = i.length) > 3) ? j % 3 : 0; 
+			return (j ? i.substr(0, j) + ',' : '') + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + ',');
+		},
 		'sp_hour': function(primary, secondary) {
 			return (primary + secondary/2) * 60;
+		},
+		'sp_next_level': function(level, multiplier) {
+			var levels = [250, 1415, 8000, 45255, 256000];
+			return levels[Math.min(level, 4)] * multiplier;
 		},
 	});
 })();

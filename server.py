@@ -149,22 +149,21 @@ class AjaxHandler(BaseHandler):
 
 
 class DynamicAjaxHandler(AjaxHandler):
-    def get(self, command):
+    def get(self, command, arg):
         userid = self.get_current_user()
-        args = self.get_argument('args', '')
 
         try:
             if command == 'characters':
                 characters = api.get_characters(userid)
                 self.write_message(characters)
             elif command == 'sheet':
-                sheet = api.get_character_sheet(userid, args)
+                sheet = api.get_character_sheet(userid, arg)
                 self.write_message(sheet)
             elif command == 'skills':
-                skills = api.get_character_skills(userid, args)
+                skills = api.get_character_skills(userid, arg)
                 self.write_message(skills)
             elif command == 'queue':
-                skills = api.get_character_queue(userid, args)
+                skills = api.get_character_queue(userid, arg)
                 self.write_message(skills)
             else:
                 print('unhandled command: ' + str(command))
@@ -193,7 +192,7 @@ if __name__ == "__main__":
             (r'/register', RegistrationHandler),
             (r'/skills', SkillsHandler),
             (r'/api/static/(.+)', StaticAjaxHandler),
-            (r'/api/(.+)', DynamicAjaxHandler),
+            (r'/api/(?P<command>[^\/]+)/?(?P<arg>[^\/]+)?', DynamicAjaxHandler),
             (r'/settings', SettingsHandler),
             (r'/settings/keys', SettingsKeyHandler),
             (r'/settings/prefs', SettingsPrefsHandler),

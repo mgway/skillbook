@@ -36,3 +36,28 @@ small {
 	color: #999;
 }
 
+table.skills thead tr {
+	font-size: larger;
+	color: #00a8e6;
+	background-color: rgba(196, 196, 196, 0.54);
+}
+
+.right {
+	text-align: right;
+}
+
+tr.training {
+	background-color: rgba(0, 168, 230, 0.20); 
+}
+
+.uk-description-list-horizontal > dt {
+	width: 100px;
+}
+
+.uk-description-list-horizontal > dd {
+	margin-left: 100px;
+}
+
+dl {
+	margin-top: 0px;
+}
