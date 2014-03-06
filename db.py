@@ -135,8 +135,8 @@ def get_characters(user):
 def get_character_briefs(user):
     # TODO: Include skill queue completion time
     with _cursor(conn) as c:
-        r = query(c, 'SELECT name, char.characterid, char.corporationname, balance, training_end FROM keys \
-                INNER JOIN characters char ON char.characterid = keys.characterid WHERE userid = %s', (user,))
+        r = query(c, 'SELECT name, char.characterid, char.corporationname, balance, training_end, training_flag FROM keys \
+                INNER JOIN characters char ON char.characterid = keys.characterid WHERE userid = %s ORDER BY name', (user,))
         return list(r)
 
 
@@ -228,19 +228,27 @@ def save_skill_queue(characterid, queue):
         for skill in queue.rows:
             data = skill.__dict__
             data['characterid'] = characterid
+            # Bail if we don't have a start time, probably means the queue is paused
+            if data['starttime'] == '':
+                break
             c.execute('INSERT INTO character_queue (characterid, typeid, starttime, endtime, \
                     position, level, startsp, endsp, updated) VALUES (%(characterid)s, %(typeid)s, %(starttime)s, \
                     %(endtime)s, %(queueposition)s, %(level)s, %(startsp)s, %(endsp)s, CURRENT_TIMESTAMP)', data)
         if queue.rows:
-            c.execute('UPDATE characters SET training_end = %s WHERE characterid = %s', 
+            # Alert the user that the queue is paused
+            if queue.rows[-1].endtime == '':
+                c.execute('UPDATE characters SET training_end = %s, training flag = null WHERE characterid = %s', 
                     (queue.rows[-1].endtime, characterid))
+            else:
+                c.execute('UPDATE characters SET training_flag = %s WHERE characterid = %s', 
+                    ('QUEUE PAUSED', characterid,))
         conn.commit()
 
 
 def get_skill_queue(characterid):
     with _cursor(conn) as c:
-        r = query(c, 'SELECT typeid, level, starttime, endtime, position, skillpoints, updated \
-                FROM character_queue WHERE characterid = %s ORDER BY queueposition', (characterid,))
+        r = query(c, 'SELECT typeid, level, starttime, endtime, position, startsp, endsp, updated \
+                FROM character_queue WHERE characterid = %s ORDER BY position', (characterid,))
         return list(r)
 
 
