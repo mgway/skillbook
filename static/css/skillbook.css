@@ -39,11 +39,12 @@ small {
 	color: #999;
 }
 
+/* Skill list touchup */
 table.skills thead tr {
 	font-size: larger;
-	color: #00a8e6;
-	background-color: rgba(196, 196, 196, 0.54);
+	background-color: rgba(196, 196, 196, 0.32);
 }
+
 table.uk-table-condensed td {
 	font-size: smaller;
 	padding: 4px 4px;
@@ -57,6 +58,7 @@ tr.training {
 	background-color: rgba(0, 168, 230, 0.20); 
 }
 
+/* Character info block */
 .uk-description-list-horizontal > dt {
 	width: 100px;
 }
@@ -67,4 +69,21 @@ tr.training {
 
 dl {
 	margin-top: 0px;
+}
+
+/* Skill queue block */
+#current_train td {
+	padding-right: 10px;
+}
+
+#queue td {
+	background-color: #5EA2E6;
+}
+
+#queue td:first-child {
+	background-color: #3399FF;
+}
+
+#queue td:nth-child(even) {
+	background-color: #A7D2FD;
 }

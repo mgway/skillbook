@@ -49,6 +49,13 @@
 			var levels = [250, 1415, 8000, 45255, 256000];
 			return levels[Math.min(level, 4)] * multiplier;
 		},
+		'to_localtime': function(timestamp) {
+			return moment(timestamp).subtract('minutes', new Date().getTimezoneOffset());
+		},
+		'roman': function(number) {
+			// The elusive roman numeral zero
+			return [0, 'I', 'II', 'III', 'IV', 'V'][number];
+		}
 	});
 })();
 

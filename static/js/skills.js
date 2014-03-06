@@ -4,10 +4,6 @@ window.addEvent('domready', function() {
 	var clocks = [];
     var total_sp = 0;
 
-	// Fetch the list of skills (static)
-	skillbook.api('static/skills', function(skills) {
-		skillbook.static = skills
-	});
 
 	if(window.location.hash) {
 		split = window.location.hash.split('/');
@@ -28,6 +24,7 @@ window.addEvent('domready', function() {
 		$('pagegrid').empty();
 		$$('table').dispose();
 		$('pagetitle').set('text', 'Characters');
+		clocks.each(function(idx) {clearInterval(idx)});
 
 		skillbook.api('characters', function(characters) {
 			var grid = $('pagegrid');
@@ -43,7 +40,7 @@ window.addEvent('domready', function() {
 				if(char['training_end']) {
 					var rowid = "timer_" + char['characterid'];
 					data += "<br />Queue finishes in <span id='"+rowid+"'></span>";
-					clocks.push( setInterval(function(){update_timer(rowid, char['training_end'])}, 500));
+					clocks.push(setInterval(function(){update_timer(rowid, char['training_end'])}, 500));
 				}
 				header.adopt(
 					skillbook.portrait(char['characterid'], char['name'], 'Character', 128, 'uk-comment-avatar'), 
@@ -87,23 +84,37 @@ window.addEvent('domready', function() {
 
 		// Check the cache first
 		if(skillbook.cache[id] == undefined) {
-			// If no cache, fetch the sheet, skills, and queue
-			skillbook.cache[id] = {}
-			skillbook.api("sheet/" + id, function(sheet) {
-				skillbook.cache[id] = sheet;
-				display_sheet();
-			});
-			skillbook.api("skills/" + id, function(skills) {
-				// Join (hooray client side join) static skill data with this character's SP/level
-				skills.each(function(skill) {
-					_.extend(skill, skillbook.static[skill.typeid]);
+			// Fetch the list of skills (static)
+			skillbook.api('static/skills', function(skills) {
+				skillbook.static = skills
+
+				skillbook.cache[id] = {}
+				skillbook.api("sheet/" + id, function(sheet) {
+					skillbook.cache[id] = sheet;
+					display_sheet();
 				});
-				skillbook.cache[id].skills = skills;
-				display_skills();
+				skillbook.api("skills/" + id, function(skills) {
+					// Join (hooray client side join) static skill data with this character's SP/level
+					skills.each(function(skill) {
+						_.extend(skill, skillbook.static[skill.typeid]);
+					});
+					skillbook.cache[id].skills = skills;
+					display_skills();
+				});
+				skillbook.api("queue/" + id, function(queue) {
+					queue.each(function(skill) {
+						_.extend(skill, skillbook.static[skill.typeid]);
+					});
+					skillbook.cache[id].queue = queue;
+					display_queue();
+				});
 			});
 		} else {
 			display_sheet();
+			display_skills();
+			display_queue();
 		}
+		//clocks.push(setInterval(function(){display_queue()}, 5000));
 
 		function display_sheet() {
 			var sheet = skillbook.cache[id];
@@ -145,8 +156,55 @@ window.addEvent('domready', function() {
             $('sheet_Skillpoints').set('html', skillbook.format_number(total_sp));
 		}
 
+		function display_queue() {
+			var queue = skillbook.cache[id].queue;
+			var panel = $('skillqueue');
+			if (panel == undefined) {
+				panel = new Element('div', {'class': 'uk-width-1-1 uk-panel', 'id':'skillqueue', 'style': 'padding-top: 10px'});
+			} else {
+				panel.empty();
+			}
+			panel.adopt(new Element('h4', {'class': 'uk-panel-title', 'text': 'Queue'}));
+			var endTime = skillbook.to_localtime(queue.getLast().endtime);
+			panel.adopt(new Element('span', {'text': endTime.preciseDiff(moment())}));
+			panel.adopt(new Element('span', {'class': 'uk-float-right', 'text': endTime.format('LLLL')}));
+
+			var table = new Element('table', {'style': 'width: 100%', 'id': 'queue'});
+			var row = new Element('tr');
+
+			var current_skill; 
+			queue.each(function(skill) {
+				var start = skillbook.to_localtime(skill.starttime);
+				var end = skillbook.to_localtime(skill.endtime);
+				var now = moment();
+				var skillpercent;
+				if(start < now && end > now) {
+					// Skill is being trained now
+					skillpercent = Math.min(end - now, 86400000) / 864000;
+					current_skill = skill;
+					$('skill_'+skill.typeid).addClass('training');
+				} else if (start > now) {
+					// Skill fits in 24 hour window, but isn't being trained now
+					skillpercent = Math.min((end-start) - now, 86400000) / 864000;
+					$('skill_'+skill.typeid).addClass('training');
+				} else {
+					return; // Skill training completed
+				}
+				var title = skill.name + ', Finishes: ' + end.format('LLLL');
+				row.adopt(new Element('td', {'style':'width: '+skillpercent+'%;', 'title': title, 'html':'&nbsp;'}))
+			});
+			var grid = $('pagegrid');
+			var template = "<tr><td>Currently Training:</td><td><strong>{name}</strong> {level}</td></tr><tr><td></td><td>{end}</td></tr><tr><td></td><td>{delta}</td></tr>";
+			table.adopt(row);
+			panel.adopt(table);
+			var end = skillbook.to_localtime(current_skill.endtime); 
+			var data = {'name': current_skill.name, 'end': end.format('LLLL'), 'delta': end.preciseDiff(moment()), 'level': skillbook.roman(current_skill.level)}
+			panel.grab(new Element('table', {'html': new Template().substitute(template, data), 'id': 'current_train'}));
+			grid.grab(panel);
+		}
+
 		function skill_category(skills, header) {
-			var rowtemplate = "<td colspan='2'><b>{name}</b><br />SP: {sp} ({timeconstant}x)</td><td class='right'>Level {level}</td>";
+			var rowtemplate = "<td colspan='2'><b>{name}</b><br />SP: {sp} ({timeconstant}x)</td><td class='right'><img src='/static/img/skill{level}.png' /><br />Level {level}</td>";
 			var headertemplate = "<tr style='cursor: pointer'><th style='width: 40%'>{h}</th><th style='width: 40%'><small>{count} skills &mdash; {sp} points</small></th><th>&nbsp;</th></tr>";
 			var table = new Element('table', {'class': 'uk-table uk-table-striped uk-table-condensed skills', 'style':'padding-bottom: 10px'});
 			var tbody = new Element('tbody');
