@@ -23,7 +23,7 @@
 				'alt': text,
 				'width': size,
 				'height': size,
-				'class': cls + " uk-responsive-height",
+				'class': cls,
 			});
 			return img;
 		},
@@ -55,6 +55,31 @@
 		'roman': function(number) {
 			// The elusive roman numeral zero
 			return [0, 'I', 'II', 'III', 'IV', 'V'][number];
+		}, 
+		'format_seconds': function(seconds) {
+			var days = parseInt(seconds / 86400) % 30;
+			var hours = parseInt(seconds / 3600) % 24;
+			var minutes = parseInt(seconds / 60) % 60;
+			var seconds = parseInt(seconds) % 60;
+			var day_s = days == 1? " day, " : " days, ";
+			var hour_s = hours == 1? " hour, " : " hours, ";
+			var minute_s = minutes == 1? " minute, " : " minutes, ";
+			var second_s = seconds == 1? " second" : " seconds";
+			return ((days > 0)? days+day_s:"") + ((hours > 0)?hours + hour_s: "") + minutes + minute_s + seconds + second_s;
+		},
+		'time_to_complete': function(sheet, skill, current_level, current_sp) {
+			var attr = {164: sheet.charisma + sheet.charismabonus, 
+				165: sheet.intelligence + sheet.intelligencebonus,
+				166: sheet.memory + sheet.memorybonus,
+				167: sheet.perception + sheet.perceptionbonus,
+				168: sheet.willpower + sheet.willpowerbonus};
+			var attributes = {164:'Charisma', 165:'Intelligence', 166:'Memory', 167:'Perception', 168:'Willpower'};
+
+			var sp_hour = skillbook.sp_hour(attr[skill.primaryattr], attr[skill.secondaryattr]);
+			var sp_required = skillbook.sp_next_level(current_level, skill.timeconstant) - current_sp;
+			var response = {'seconds': (sp_required/sp_hour) * 3600, 'sp_hour': sp_hour, 'sp_required': sp_required, 
+				'primary': attributes[skill.primaryattr], 'secondary': attributes[skill.secondaryattr]};
+			return response;
 		}
 	});
 })();

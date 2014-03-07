@@ -114,7 +114,7 @@ window.addEvent('domready', function() {
 			display_skills();
 			display_queue();
 		}
-		//clocks.push(setInterval(function(){display_queue()}, 5000));
+		clocks.push(setInterval(function(){display_queue()}, 5000));
 
 		function display_sheet() {
 			var sheet = skillbook.cache[id];
@@ -219,7 +219,7 @@ window.addEvent('domready', function() {
 		function skill_category(skills, header) {
 			var rowtemplate = "<td colspan='2'><b>{name}</b><br />SP: {sp} ({timeconstant}x)<div class='tooltip'>{tip}</div></td><td class='right'><img src='/static/img/skill{level}.png' /><br />Level {level}</td>";
 			var headertemplate = "<tr style='cursor: pointer'><th style='width: 40%'>{h}</th><th style='width: 40%'><small>{count} skills &mdash; {sp} points</small></th><th>&nbsp;</th></tr>";
-			var tiptemplate = '<b>Completed Level:</b> {level}<br /><b>Training time:</b> {time}<br/><b>Description</b><br />{description}';
+			var tiptemplate = '<b>Completed Level:</b> {level}<br /><b>Training time:</b> {time}<br/><b>Attributes: </b> {training.primary}, {training.secondary} ({training.sp_hour} SP/Hour)<br /><br /><b>Description:</b><br />{description}';
 			var table = new Element('table', {'class': 'uk-table uk-table-striped uk-table-condensed skills', 'style':'padding-bottom: 10px'});
 			var tbody = new Element('tbody');
 			var category_sp = 0;
@@ -228,8 +228,10 @@ window.addEvent('domready', function() {
 				category_sp += skill.skillpoints
 				skill.sp = skillbook.format_number(skill.skillpoints) + '/' + 
 					skillbook.format_number(skillbook.sp_next_level(skill.level, skill.timeconstant));
-				
-				var data = {'level': skillbook.roman(skill.level), 'time': 'TBD', 'description': skill.description.replace('\n', '<br />')};
+			
+				var response = skillbook.time_to_complete(skillbook.cache[id], skill, skill.level, skill.skillpoints);
+				var data = {'level': skillbook.roman(skill.level), 'time': skillbook.format_seconds(response['seconds']),
+					'description': skill.description.replace('\n', '<br />'), 'training': response};
 				skill.tip = new Template().substitute(tiptemplate, data);
 
 				var row = new Element('tr', {'html': new Template().substitute(rowtemplate, skill), 'id': 'skill_'+skill.typeid});

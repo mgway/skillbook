@@ -237,11 +237,11 @@ def save_skill_queue(characterid, queue):
         if queue.rows:
             # Alert the user that the queue is paused
             if queue.rows[-1].endtime == '':
-                c.execute('UPDATE characters SET training_end = %s, training flag = null WHERE characterid = %s', 
-                    (queue.rows[-1].endtime, characterid))
-            else:
                 c.execute('UPDATE characters SET training_flag = %s WHERE characterid = %s', 
                     ('QUEUE PAUSED', characterid,))
+            else:
+                c.execute('UPDATE characters SET training_end = %s, training_flag = null WHERE characterid = %s', 
+                    (queue.rows[-1].endtime, characterid))
         conn.commit()
 
 
