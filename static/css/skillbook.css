@@ -29,6 +29,7 @@ body {
 
 .error {
 	color: #842107;
+	font-weight: bold;
 }
 
 #frame {
@@ -43,6 +44,14 @@ small {
 table.skills thead tr {
 	font-size: larger;
 	background-color: rgba(196, 196, 196, 0.32);
+}
+
+table.skills td {
+	position: relative;
+}
+
+table.skills td:hover .tooltip {
+	display: block;
 }
 
 table.uk-table-condensed td {
@@ -78,12 +87,36 @@ dl {
 
 #queue td {
 	background-color: #5EA2E6;
+	position: relative;
+}
+
+#queue td:hover .tooltip {
+	display: block;
 }
 
 #queue td:first-child {
 	background-color: #3399FF;
+	position: relative;
 }
 
 #queue td:nth-child(even) {
 	background-color: #A7D2FD;
+	position: relative;
+}
+
+.tooltip {
+	display: none;
+	position: absolute;
+	top: 32px;
+	left: 8px;
+	line-height: 1.5em;
+	padding: 8px 10px;
+	background-color: #f5f5f5;
+	border: 1px solid rgba(0, 0, 0, 0.06);
+	color: #333;
+	z-index: 1;
+	pointer-events: none;
+	min-width: 80px;
+	max-width: 500px;
+	overflow: wrap;
 }
