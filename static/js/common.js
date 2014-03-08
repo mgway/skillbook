@@ -57,6 +57,8 @@
 			return [0, 'I', 'II', 'III', 'IV', 'V'][number];
 		}, 
 		'format_seconds': function(seconds) {
+			if (seconds == 0)
+				return "None"
 			var days = parseInt(seconds / 86400) % 30;
 			var hours = parseInt(seconds / 3600) % 24;
 			var minutes = parseInt(seconds / 60) % 60;

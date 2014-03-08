@@ -87,10 +87,10 @@ window.addEvent('domready', function() {
 			// Fetch the list of skills (static)
 			skillbook.api('static/skills', function(skills) {
 				skillbook.static = skills
-
 				skillbook.cache[id] = {}
+
 				skillbook.api("sheet/" + id, function(sheet) {
-					skillbook.cache[id] = sheet;
+					skillbook.cache[id].sheet = sheet;
 					display_sheet();
 				});
 				skillbook.api("skills/" + id, function(skills) {
@@ -100,6 +100,7 @@ window.addEvent('domready', function() {
 					});
 					skillbook.cache[id].skills = skills;
 					display_skills();
+
 				});
 				skillbook.api("queue/" + id, function(queue) {
 					queue.each(function(skill) {
@@ -117,7 +118,7 @@ window.addEvent('domready', function() {
 		clocks.push(setInterval(function(){display_queue()}, 5000));
 
 		function display_sheet() {
-			var sheet = skillbook.cache[id];
+			var sheet = skillbook.cache[id].sheet;
 
 			// Set up our header
 			var list_chars = new Element('a', {'text': 'Characters', 'style': 'cursor: pointer', 'class': 'uk-link-muted'});
@@ -129,7 +130,7 @@ window.addEvent('domready', function() {
 			var panel = new Element('div', {'class': 'uk-width-1-1 uk-hidden-small'});
 			var list = new Element('dl', {'class': 'uk-description-list uk-description-list-horizontal'});
 			var massaged = {'Bio': sheet['bio'], 'Balance': skillbook.format_isk(sheet['balance']),
-				'Birthday': moment(sheet['birthday']).subtract('minutes', new Date().getTimezoneOffset()).format('LLL'), 
+				'Birthday': skillbook.to_localtime(sheet['birthday']).format('LLL'), 
 				'Corporation': sheet['corporationname'], 'Skillpoints': 100, 
 				'Clone': skillbook.format_number(sheet['clonesp']) + " (" + sheet['clonegrade'] + ")"
 			}
@@ -147,6 +148,7 @@ window.addEvent('domready', function() {
 		}
 
 		function display_skills() {
+			total_sp = 0;
 			var groups = _.groupBy(skillbook.cache[id].skills, function(skill){ return skill.groupname });
 			var frame = $('frame');
 			_.sortBy(groups, function(group) { return group[0].groupname }).each(function(skills, key) { 
@@ -179,12 +181,10 @@ window.addEvent('domready', function() {
 					// Skill is being trained now
 					skillpercent = Math.min(end - now, 86400000) / 864000;
 					current_skill = skill;
-					$('skill_'+skill.typeid).addClass('training');
 					tip = '<b>{name} {level}<br />Finishes:</b> {end}';
 				} else if (start > now) {
 					// Skill fits in 24 hour window, but isn't being trained now
 					skillpercent = Math.min((end-start) - now, 86400000) / 864000;
-					$('skill_'+skill.typeid).addClass('training');
 				} else {
 					return; // Skill training completed
 				}
@@ -228,7 +228,7 @@ window.addEvent('domready', function() {
 				skill.sp = skillbook.format_number(skill.skillpoints) + '/' + 
 					skillbook.format_number(skillbook.sp_next_level(skill.level, skill.timeconstant));
 			
-				var response = skillbook.time_to_complete(skillbook.cache[id], skill, skill.level, skill.skillpoints);
+				var response = skillbook.time_to_complete(skillbook.cache[id].sheet, skill, skill.level, skill.skillpoints);
 				var data = {'level': skillbook.roman(skill.level), 'time': skillbook.format_seconds(response['seconds']),
 					'description': skill.description.replace('\n', '<br />'), 'training': response};
 				skill.tip = new Template().substitute(tiptemplate, data);
