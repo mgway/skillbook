@@ -4,6 +4,13 @@ import cache
 from cache import cached
 import datetime
 
+
+def update_all_characters():
+    users = db.get_users()
+    for user in users:
+        update_characters_for_user(user.id)
+
+
 def update_characters_for_user(userid):
     for row in db.get_characters(userid):
         if row.cached_until < datetime.datetime.now():

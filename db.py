@@ -125,6 +125,12 @@ def remove_key(user, keyid):
         conn.commit()
 
 
+def get_users():
+    with _cursor(conn) as c:
+        r = query(c, 'SELECT id FROM users', [])
+        return list(r)
+
+
 def get_characters(user):
     with _cursor(conn) as c:
         r = query(c, 'SELECT name, char.characterid, keyid, vcode, keymask, cached_until FROM keys \
