@@ -25,6 +25,14 @@ def update_characters_for_user(userid):
 
 def add_key(userid, keyid, vcode):
     mask, characters = eveapi.key_info(keyid, vcode)
+
+    # Make sure the key has the minimum amount access
+    requirements = {'8':'CharacterSheet', '131072': 'SkillTraining', '262144':'SkillQueue', 
+            '16777216':'CharacterInfo', '33554432':'AccountStatus'}
+    for req in requirements.keys():
+        if int(mask) & int(req) == 0:
+            raise SkillbookException('The supplied key is missing the %s permission' % requirements[req])
+
     db.add_key(userid, keyid, vcode, mask, characters.key.characters.rows)
 
 

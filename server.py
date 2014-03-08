@@ -101,7 +101,7 @@ class SettingsKeyHandler(BaseHandler):
                 api.add_key(userid, keyid, vcode)
                 api.update_characters_for_user(userid)
                 self.redirect('/settings')
-            except (eveapi.APIException, eveapi.HttpException) as e:
+            except (eveapi.APIException, eveapi.HttpException, api.SkillbookException) as e:
                 error = u'?context=key&error=' + tornado.escape.url_escape(e.message)
                 self.redirect('/settings' + error)
 

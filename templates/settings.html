@@ -10,13 +10,14 @@
 					<form class="uk-form" method="POST" action="/settings/prefs">
 					<fieldset>
 						<div class="uk-form-row">
-							<input type="email" name="email" placeholder="mail" value="{{prefs.email}}" class="uk-width-2-3"/>
+							<input type="email" name="email" placeholder="mail" 
+								value="{% if prefs.email %}{{prefs.email}}{% end %}" class="uk-width-2-3"/>
 							<small>{% if not prefs.valid_email %}not confirmed{% end %}</small>
 						</div>
 						<div class="uk-form-row">
 							<label>
 								<input type="checkbox" name="newsletter" {% if prefs.newsletter %}checked{% end %}/> 
-								Send me mail about new features
+								Send me mail about stuff (not actually a thing yet)
 							</label>
 						</div>
 						<div class="uk-form-row">
@@ -68,7 +69,9 @@
 			<div class="uk-panel uk-panel-box uk-panel-box-secondary" style="margin-top: 10px;">
 				<img src="http://image.eveonline.com/Character/1_64.jpg" style="float:left; padding: 2px;"/>
 				<div style="float: left; padding: 5px;"> 
-					<h4>Add an API key <small class="error">{% if context == "key" %}{{ error }}{% end %}</small></h4>
+					<h4>Add an API key <small {% if context == "key" %}class="error">{{ error }}{% else %}>Don't have a key? Make one 
+							<a href="https://community.eveonline.com/support/api-key/CreatePredefined?accessMask=17170440">here</a>{% end %}
+					</small></h4>
 					<form method="POST" action="/settings/keys" class="uk-form">
 						<input type="text" name="keyid" size="8" class="uk-form-small" placeholder="Key ID"></input>
 						<input type="text" name="vcode" size="35" class="uk-form-small" placeholder="Verification Code"></input>

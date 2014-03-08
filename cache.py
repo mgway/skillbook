@@ -65,9 +65,9 @@ def cached(key, arg_pos=None, kwarg_name=None, method='json'):
             # Extract a unique identifier for the key out of the 
             # method invocation
             full_key = key
-            if arg_pos:
+            if arg_pos != None:
                 full_key = '%s:%s' % (key, args[arg_pos])
-            elif kwarg_name:
+            elif kwarg_name != None:
                 full_key = '%s:%s' % (key, kwargs[kwarg_name])
 
             data = fetch(full_key, result=method)
