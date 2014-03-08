@@ -196,8 +196,7 @@ window.addEvent('domready', function() {
 			
 			var endTime = skillbook.to_localtime(queue.getLast().endtime);
 			if (endTime - moment() < 86400000) {
-				var percent_empty = 100 - ((endTime - moment()) / 864000) + '%';
-				var empty = new Element('td', {'class': 'error', 'style': 'background-color: #842107; width: ' + percent_empty, 'html': '&nbsp'});
+				var empty = new Element('td', {'class': 'error', 'style': 'background-color: #842107', 'html': '&nbsp'});
 				empty.grab(new Element('span', {'class': 'tooltip', 'html': "Free Room <br>" + moment(endTime).preciseDiff(moment().add('hours', 24))}));
 				row.adopt(empty);
 			} else {
