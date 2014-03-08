@@ -10,6 +10,7 @@ import api
 import config
 import eveapi
 
+
 class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
         user_json = self.get_secure_cookie("skillbook_user")
@@ -98,6 +99,7 @@ class SettingsKeyHandler(BaseHandler):
         else:
             try:
                 api.add_key(userid, keyid, vcode)
+                api.update_characters_for_user(userid)
                 self.redirect('/settings')
             except (eveapi.APIException, eveapi.HttpException) as e:
                 error = u'?context=key&error=' + tornado.escape.url_escape(e.message)
