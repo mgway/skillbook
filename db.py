@@ -127,13 +127,12 @@ def remove_key(user, keyid):
 
 def get_characters(user):
     with _cursor(conn) as c:
-        r = query(c, 'SELECT name, char.characterid, keyid, vcode, keymask FROM keys INNER JOIN characters char \
-                ON char.characterid = keys.characterid WHERE userid = %s', (user,))
+        r = query(c, 'SELECT name, char.characterid, keyid, vcode, keymask, cached_until FROM keys \
+            INNER JOIN characters char ON char.characterid = keys.characterid WHERE userid = %s', (user,))
         return list(r)
 
 
 def get_character_briefs(user):
-    # TODO: Include skill queue completion time
     with _cursor(conn) as c:
         r = query(c, 'SELECT name, char.characterid, char.corporationname, balance, training_end, training_flag FROM keys \
                 INNER JOIN characters char ON char.characterid = keys.characterid WHERE userid = %s ORDER BY name', (user,))
@@ -167,11 +166,11 @@ def save_character_sheet(character):
         c.execute('UPDATE characters SET (updated, corporationid, corporationname, bio, birthday, \
                     clonegrade, clonesp, balance, intelligence, memory, willpower, \
                     perception, charisma, intelligencebonus, memorybonus, willpowerbonus, \
-                    perceptionbonus, charismabonus) = \
+                    perceptionbonus, charismabonus, cached_until) = \
                     (CURRENT_TIMESTAMP, %(corporationid)s, %(corporationname)s, %(bio)s, %(birthday)s, \
-                    %(clonename)s, %(cloneskillpoints)s, %(balance)s, %(intelligence)s,\
-                    %(memory)s, %(willpower)s, %(perception)s, %(charisma)s, %(intelligencebonus)s, \
-                    %(memorybonus)s, %(willpowerbonus)s, %(perceptionbonus)s,%(charismabonus)s) WHERE \
+                    %(clonename)s, %(cloneskillpoints)s, %(balance)s, %(intelligence)s, %(memory)s, \
+                    %(willpower)s, %(perception)s, %(charisma)s, %(intelligencebonus)s, %(memorybonus)s, \
+                    %(willpowerbonus)s, %(perceptionbonus)s, %(charismabonus)s, %(cached_until)s) WHERE \
                     characterid = %(characterid)s', character.__dict__)
         conn.commit()
         

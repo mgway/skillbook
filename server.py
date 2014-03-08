@@ -3,6 +3,7 @@ import tornado.escape
 import tornado.web
 import os
 import simplejson 
+import redis
 
 import db
 import api
@@ -137,7 +138,7 @@ class SettingsPasswordHandler(BaseHandler):
 
 
 class AjaxHandler(BaseHandler):
-    def write_message(self, message):
+    def write_message(self, message, pre=False):
         def json_handler(obj):
             if hasattr(obj, 'isoformat'):
                 return obj.isoformat()
@@ -145,7 +146,10 @@ class AjaxHandler(BaseHandler):
                 raise TypeError('Object of type %s with value of %s is not JSON serializable' % (type(obj), repr(obj)))
         
         self.set_header('Content-Type', 'application/json')
-        self.finish(simplejson.dumps(message, use_decimal=True, default=json_handler))
+        if pre:
+            self.finish(message)
+        else:
+            self.finish(simplejson.dumps(message, use_decimal=True, default=json_handler))
 
 
 class DynamicAjaxHandler(AjaxHandler):
@@ -155,16 +159,16 @@ class DynamicAjaxHandler(AjaxHandler):
         try:
             if command == 'characters':
                 characters = api.get_characters(userid)
-                self.write_message(characters)
+                self.write_message(characters, pre=True)
             elif command == 'sheet':
                 sheet = api.get_character_sheet(userid, arg)
-                self.write_message(sheet)
+                self.write_message(sheet, pre=True)
             elif command == 'skills':
                 skills = api.get_character_skills(userid, arg)
-                self.write_message(skills)
+                self.write_message(skills, pre=True)
             elif command == 'queue':
                 skills = api.get_character_queue(userid, arg)
-                self.write_message(skills)
+                self.write_message(skills, pre=True)
             else:
                 print('unhandled command: ' + str(command))
 
@@ -178,7 +182,7 @@ class StaticAjaxHandler(AjaxHandler):
         args = self.get_argument('args', '')
 
         if command == 'skills':
-            self.write_message(api.get_skills())
+            self.write_message(api.get_skills(), pre=True)
         else:
             print('unhandled command: ' + str(command))
 
