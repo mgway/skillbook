@@ -106,7 +106,6 @@ def create_account(username, password):
 
 def add_key(user, key_id, key_code, key_mask, characters):
     with _cursor(conn) as c:
-
         # Add all characters in this key
         for char in characters:
             try:
@@ -119,9 +118,25 @@ def add_key(user, key_id, key_code, key_mask, characters):
             conn.commit()
 
 
-def remove_key(user, keyid):
+def add_grants(key_id, grants, characters):
     with _cursor(conn) as c:
-        c.execute('DELETE FROM keys WHERE userid = %s AND keyid = %s', (user, keyid))
+        for char in characters:
+            for grant in grants:
+                try:
+                    c.execute('INSERT INTO character_api_status (keyid, characterid, method, ignored) \
+                        VALUES (%s, %s, %s, %s)',
+                        (key_id, char.characterid, grant['name'], grant['ignored']))
+                except psycopg2.IntegrityError:
+                    # Happens if the grant/keyid/characterid combination is a duplicate. In this case,
+                    # someone else must have added this key to their account. No matter, since we're updating
+                    # by characterid, not by userid.
+                    conn.rollback()
+            conn.commit()
+
+
+def remove_key(user, key_id):
+    with _cursor(conn) as c:
+        c.execute('DELETE FROM keys WHERE userid = %s AND keyid = %s', (user, key_id))
         conn.commit()
 
 
@@ -250,11 +265,41 @@ def save_skill_queue(characterid, queue):
         conn.commit()
 
 
-def get_skill_queue(characterid):
+def get_skill_queue(character_id):
     with _cursor(conn) as c:
         r = query(c, 'SELECT typeid, level, starttime, endtime, position, startsp, endsp, updated \
-                FROM character_queue WHERE characterid = %s ORDER BY position', (characterid,))
+                FROM character_queue WHERE characterid = %s ORDER BY position', (character_id,))
         return list(r)
+
+
+# Get all updates for one particular key. Used for pulling in character information for a newly added key
+def get_update_for_key(key_id):
+    with _cursor(conn) as c:
+        r = query(c, 'SELECT cas.characterid, cas.method, k.vcode, k.keyid, k.keymask, cas.response_code \
+                FROM character_api_status cas INNER JOIN keys k on k.characterid = cas.characterid \
+                AND k.keyid = cas.keyid WHERE (cas.cached_until < CURRENT_TIMESTAMP OR cas.cached_until IS NULL) \
+                AND NOT ignored AND k.keyid = %s', (key_id,))
+        return list(r)
+
+
+# Get a list of all api methods to call for all characters at this time
+def get_update_list():
+    with _cursor(conn) as c:
+        r = query(c, 'SELECT cas.characterid, cas.method, k.vcode, k.keyid, k.keymask, cas.response_code \
+                FROM character_api_status cas INNER JOIN keys k on k.characterid = cas.characterid \
+                AND k.keyid = cas.keyid WHERE (cas.cached_until < CURRENT_TIMESTAMP OR cas.cached_until IS NULL) \
+                AND NOT ignored', ())
+        return list(r)
+
+
+# Now that we've performed all the API calls specified by get_update_list, 
+# save the metadata about the calls
+def save_update_list(updates):
+    with _cursor(conn) as c:
+        c.executemany('UPDATE character_api_status SET (cached_until, last_call, response_code, response_error, ignored) = \
+                (%(cached_until)s, CURRENT_TIMESTAMP, %(response_code)s, %(response_error)s, %(ignored)s) WHERE \
+                characterid = %(characterid)s AND keyid = %(keyid)s AND method = %(method)s', updates)
+        conn.commit()
 
 
 # -- Static data
@@ -263,6 +308,15 @@ def get_skills():
         r = query(c, 'SELECT typeid, skills.groupid, groups.name groupname, description, skills.name, \
                 baseprice, timeconstant, primaryattr, secondaryattr FROM skills \
                 INNER JOIN groups ON skills.groupid = groups.groupid', (None,))
+        return list(r)
+
+
+def get_api_calls(required_only=False):
+    with _cursor(conn) as c:
+        sql = 'SELECT * FROM api_calls'
+        if required_only:
+            sql += ' WHERE required = TRUE'
+        r = query(c, sql, ())
         return list(r)
 
 
