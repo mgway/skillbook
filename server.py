@@ -24,6 +24,16 @@ class MainHandler(BaseHandler):
         self.render('index.html', error=error)
 
 
+class AboutHandler(BaseHandler):
+    def get(self):
+        self.render('info.html')
+
+
+class HelpHandler(BaseHandler):
+    def get(self):
+        self.render('help.html')
+
+
 class LoginHandler(BaseHandler):
     def get(self):
         self.render('login.html')
@@ -204,6 +214,8 @@ if __name__ == "__main__":
     application = tornado.web.Application(
         handlers = [
             (r'/', MainHandler),
+            (r'/info', AboutHandler),
+            (r'/help', HelpHandler),
             (r'/login', LoginHandler),
             (r'/logout', LogoutHandler),
             (r'/register', RegistrationHandler),

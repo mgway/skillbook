@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block main %}
+	<div id="frame" class="uk-container-center uk-width-1-2">
+		<h2>Help</h2>
+
+		<h3>Account</h3>
+		<p><b>I lost my password</b><br/>
+			Should have kept better track of it. Password recovery not yet implemented.<br/>
+			<br/>
+
+			<b>Why do you need my email address?</b><br/>
+			For the previously mentioned, not yet implemented feature of password recovery
+		</p>
+
+		<h3>Adding an API Key</h3>
+		<p><b>What permissions are required?</b><br/>
+			Skillbook only needs CharacterInfo (private), SkillQueue, and CharacterSheet permissions. 
+			You can supply more, but the key will be rejected if don't supply those three. Follow 
+			<a href="https://community.eveonline.com/support/api-key/CreatePredefined?accessMask=17039368">
+				this link</a> create a key that has the correct permissions automatically filled in.<br/>
+			<br/>
+
+			<b>Why can't I add this key?</b><br/>
+			Did it have the required permissions? Check the previous answer for more information.<br/> Have you
+			added this key to your account already? While other accounts can have the same key without issue, 
+			you can't add the same key to your account twice. For example, it is okay if you gave a key to a 
+			corporation's recruiter who used it on Skillbook and then try to use the same key yourself. 
+		</p>
+
+		<h3>Character sheet</h3>
+		<p><b>I added something to my queue but it isn't showing up on skillbook</b><br/>
+			Be patient. The EVE API caches the skill queue for a length of time (variable, usually 15-30 
+			minutes), so it may take a while for the queue to update. If it hasn't updated in more than an hour, 
+			try refreshing the page. If the problem persists, consider reporting a bug (see below). 
+		</p>
+
+		<h3>Plans</h3>
+		<p><b>Why can't I click on plans?</b><br/>
+			Patience...
+		</p>
+
+
+
+		<h3>Bugs</h3>
+		<p>Find a bug? Report it <a href="https://github.com/mgway/skillbook/issues">here</a>. Or, better yet, 
+		fix it yourself since <a href="https://github.com/mgway/skillbook">skillbook is open source</a>.
+		</p>
+	</div>
+{% end %}
