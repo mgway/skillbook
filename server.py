@@ -107,9 +107,14 @@ class SettingsKeyHandler(BaseHandler):
             try:
                 api.add_key(userid, keyid, vcode)
                 self.redirect('/settings')
-            except (eveapi.APIException, eveapi.HttpException, api.SkillbookException) as e:
+            except (eveapi.APIException, eveapi.HttpException, api.SkillbookException, db.UserError) as e:
                 error = u'?context=key&error=' + tornado.escape.url_escape(e.message)
                 self.redirect('/settings' + error)
+            except Exception as e:
+                error = u'?context=key&error=' + tornado.escape.url_escape('An unknown error has occurred')
+                print(e)
+                self.redirect('/settings' + error)
+
 
 
 class SettingsPrefsHandler(BaseHandler):

@@ -42,9 +42,9 @@ def perform_updates(key_id=None):
     db.save_update_list(results)
 
 
-def remove_key(userid, keyid):
-    db.remove_key(userid, keyid)
-    cache.remove('characters:%s' % userid)
+def remove_key(user_id, key_id):
+    db.remove_key(user_id, key_id)
+    cache.remove('characters:%s' % user_id)
 
 
 def add_key(user_id, key_id, vcode):
@@ -63,7 +63,7 @@ def add_key(user_id, key_id, vcode):
     db.add_key(user_id, key_id, vcode, mask, characters.key.characters.rows)
     db.add_grants(key_id, grants, characters.key.characters.rows)
     perform_updates(key_id=key_id)
-    cache.remove('characters:%s' % userid)
+    cache.remove('characters:%s' % user_id)
 
 
 @cached('characters', arg_pos=0)

@@ -108,13 +108,19 @@ def add_key(user, key_id, key_code, key_mask, characters):
     with _cursor(conn) as c:
         # Add all characters in this key
         for char in characters:
+            # Why two try blocks? Well, we can handle multiple characters on different keys
             try:
                 c.execute('INSERT INTO characters (characterid, name) VALUES (%s, %s)', 
                     (char.characterid, char.charactername))
             except psycopg2.IntegrityError:
                 conn.rollback()
-            c.execute('INSERT INTO keys (userid, keyid, vcode, keymask, characterid) VALUES \
-                    (%s, %s, %s, %s, %s)', (user, key_id, key_code, key_mask, char.characterid))
+            # But want to disallow users from adding the same key twice
+            try:
+                c.execute('INSERT INTO keys (userid, keyid, vcode, keymask, characterid) VALUES \
+                        (%s, %s, %s, %s, %s)', (user, key_id, key_code, key_mask, char.characterid))
+            except psycopg2.IntegrityError:
+                conn.rollback()
+                raise UserError('This key has already been added to your account')
             conn.commit()
 
 
