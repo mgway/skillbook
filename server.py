@@ -92,7 +92,14 @@ class SettingsKeyHandler(BaseHandler):
     def post(self):
         userid = self.get_current_user()
         keyid = self.get_argument('keyid')
-        vcode = self.get_argument('vcode')
+        vcode = self.get_argument('vcode', default='')
+        remove = self.get_argument('remove', False)
+        
+        if remove == 'yes':
+            api.remove_key(userid, keyid)
+            self.set_status(200)
+            return self.finish()
+
         if keyid.strip() == "" or vcode.strip() == "":
             error = u'?context=key&error=' + tornado.escape.url_escape('Please enter a valid Key ID and vCode')
             self.redirect('/settings' + error)

@@ -5,6 +5,7 @@
 		<link rel="icon" type="image/png" href="/static/favicon.png">
 		<link rel="stylesheet" type="text/css" href="/static/css/uikit.css" />
 		<link rel="stylesheet" type="text/css" href="/static/css/uikit.almost-flat.css" />
+		<link rel="stylesheet" type="text/css" href="/static/css/font-awesome.min.css" />
 		<link rel="stylesheet" type="text/css" href="/static/css/skillbook.css" />
 		<script>window.skillbook = {}</script>
 		{% block css %}{% end %}
@@ -14,7 +15,7 @@
 		{% if current_user %}
 		<nav class="uk-navbar uk-navbar-attached">
 			<div class="uk-container uk-container-center">
-				<a href="#fixme" class="uk-navbar-brand">skillbook</a>
+				<a href="/skills" class="uk-navbar-brand">skillbook</a>
 				<ul class="uk-navbar-nav uk-navbar-flip">
 					<li><a href="/skills">skills</a></li>
 					<li><a>plans</a></li>
@@ -30,7 +31,7 @@
 		<p>&nbsp;</p>
 		<div id="footer">
 			&copy; 2014 skillbook developers. All EVE Online related materials are property of CCP Games hf. 
-			<a href="#">about</a> | <a href="#">legal</a>
+			<a href="#">about</a> | <a href="#">legal</a> | <a href="#">help</a>
 		</div>
 		<script src="/static/js/mootools.js"></script>
 		<script src="/static/js/mootools-more-1.4.0.1.js"></script>

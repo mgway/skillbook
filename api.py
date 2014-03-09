@@ -13,7 +13,6 @@ def perform_updates(key_id=None):
         updates = db.get_update_list()
     results = []
     for row in updates:
-        print(row.raw)
         try:
             result = row.raw
             if row.method == 'CharacterSheet':
@@ -22,8 +21,6 @@ def perform_updates(key_id=None):
                 # don't care to update that often
                 data.cached_until = data.cached_until + datetime.timedelta(minutes=15)
                 db.save_character_sheet(data)
-                print('Cached until:')
-                print(data.cached_until)
             elif row.method == 'SkillQueue':
                 data = eveapi.skill_queue(row.keyid, row.vcode, row.keymask, row.characterid)
                 db.save_skill_queue(row.characterid, data.skillqueue)
@@ -57,13 +54,16 @@ def add_key(user_id, key_id, vcode):
     requirements = db.get_api_calls()
     grants = []
     for req in requirements:
-        if req.required and int(mask) & req.mask == 0:
-            raise SkillbookException('The supplied key is missing the %s permission' % req.name)
-        grants.append({'name': req.name, 'ignored': not req.required})
+        if int(mask) & req.mask == 0:
+            if req.required:
+                raise SkillbookException('The supplied key is missing the %s permission' % req.name)
+        else:
+            grants.append({'name': req.name, 'ignored': not req.required})
 
     db.add_key(user_id, key_id, vcode, mask, characters.key.characters.rows)
     db.add_grants(key_id, grants, characters.key.characters.rows)
     perform_updates(key_id=key_id)
+    cache.remove('characters:%s' % userid)
 
 
 @cached('characters', arg_pos=0)
