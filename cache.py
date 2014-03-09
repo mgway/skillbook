@@ -2,10 +2,13 @@ import redis
 import pickle
 import simplejson
 
-r = redis.StrictRedis(host='localhost', port=6379, db=0)
+import config
+
+r = redis.StrictRedis(host=config.redis.host, port=config.redis.port, db=config.redis.db)
 
 def exists(key):
     return r.exists(key)
+
 
 def store(key, data, method='json', expire_at=None, expires=900):
     if method == 'json':

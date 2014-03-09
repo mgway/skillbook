@@ -11,7 +11,8 @@ class WebConfig(Config):
     attrs = dict([
         ('port', 8888),
         ('host', 'localhost'),
-        ('cookie_secret', 'super sekret'),
+        ('cookie_secret', 'You should probably change this'),
+        ('debug', True)
     ])
 
 class DBConfig(Config):
@@ -24,6 +25,15 @@ class DBConfig(Config):
         ('database', 'eveskill'),
     ])
 
+
+class RedisConfig(Config):
+    key = 'redis'
+    attrs = dict([
+        ('host', 'localhost'),
+        ('port', 6379),
+        ('db', 0)
+    ])
+
 try:
     conf = yaml.load(open('config.yaml', 'r'))
 except FileNotFoundError:
@@ -31,3 +41,4 @@ except FileNotFoundError:
 
 web = WebConfig(conf)
 db = DBConfig(conf)
+redis = RedisConfig(conf)

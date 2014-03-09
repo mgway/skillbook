@@ -220,7 +220,7 @@ if __name__ == "__main__":
         cookie_secret=config.web.cookie_secret,
         xsrf_cookies=True,
         login_url='/',
-        debug=True
+        debug=config.web.debug
     )
 
     print("Listening on :" + str(config.web.port))

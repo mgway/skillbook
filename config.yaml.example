@@ -1,7 +1,8 @@
 web:
     port: 8888
     host: 'localhost'
-    cookie_secret: 'sadjsadkfjl'
+    cookie_secret: 'you should probably change this'
+	debug: True
 
 db:
     host: localhost
@@ -9,3 +10,8 @@ db:
     port: 5432
     password: eveskill
     database: eveskill
+
+redis:
+	host: localhost
+	port: 6379
+	db: 0
