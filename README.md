@@ -3,29 +3,63 @@ Skillbook is a web based tool for managing skill plans for EVE Online.
 
 Requirements
 ---
+**For development:**
 
-Development requirements:
-PostgreSQL >= 9.2
-python >= 3.2
-psycopg2, requests
+* postgreql-server >= 9.1
+* postgresql-server-dev-X.Y
+* python >= 3.3
+* redis >= 2.6
+* virtualenv is nice to have but isn't strictly required
 
-A requirements file is provided for your convenience:
+**For production:**
 
-	pip install -r requirements.txt
+* lighttpd or nginx
+* supervisord
 
-Additionally, (optional) data extract from the CCP SDE requires:
-MySQL
-oursql
+All of the python package dependencies can be found in the requirements file:
+
+	$ pip install -r setup/requirements.txt
+
+Additionally, data extract from the CCP SDE requires:
+
+* mysql-server >= 5.5
+* oursql
+
+Note: This extract is **not** required; the result of the extract is provided in data.sql
 
 
 PostgreSQL setup
 ---
+Create the user and database:
 
-User eveskill
-Password eveskill
-Database eveskill
+	$ sudo -u postgres psql
 
-	bunzip2 skillbook.sql.bz2 | psql
+	CREATE DATABASE eveskill;
+	CREATE USER eveskill WITH PASSWORD 'eveskill';
+	GRANT ALL ON DATABASE eveskill TO eveskill;
+ 
+Load the schema and static data:
+
+	$ psql eveskill < setup/schema.sql
+	$ psql eveskill < setup/data.sql
+
+
+Server setup
+---
+Once you have all of the dependencies installed and have both the database and redis running:
+
+	$ cp config.yaml.example config.yaml
+	
+And configure as appropriate
+
+Run the server with 
+	
+	$ python server.py
+
+**For production use:**
+
+* Configure lighttpd or nginx to act as a reverse proxy. Sample configuration files are located in `setup/lighttpd.conf.example` and `setup/nginx.conf.example`
+* Configure supervisord 
 
 
 License
@@ -42,3 +76,4 @@ EVE Online and the EVE logo are the registered trademarks of CCP hf. All rights 
 All other trademarks are the property of their respective owners. CCP hf. has granted
 permission to use the information and graphics provided within this application but does not 
 endorse, and is not in any way affiliated with this project.
+
