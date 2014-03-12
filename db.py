@@ -241,8 +241,10 @@ def get_character_sheet(characterid):
 
 def get_character_skills(characterid):
     with _cursor(conn) as c:
-        r = query(c, 'SELECT typeid, level, skillpoints, training, updated FROM character_skills \
-                WHERE characterid = %s', (characterid,)) 
+        r = query(c, 'SELECT s.typeid, cs.level, cs.skillpoints, cs.training, cs.updated, \
+                s.name, g.name groupname, s.description, s.primaryattr, s.secondaryattr, s.timeconstant \
+                FROM character_skills cs INNER JOIN skills s ON s.typeid = cs.typeid \
+                INNER JOIN groups g on g.groupid = s.groupid WHERE characterid = %s', (characterid,)) 
         return list(r)
 
 
@@ -273,8 +275,9 @@ def save_skill_queue(characterid, queue):
 
 def get_skill_queue(character_id):
     with _cursor(conn) as c:
-        r = query(c, 'SELECT typeid, level, starttime, endtime, position, startsp, endsp, updated \
-                FROM character_queue WHERE characterid = %s ORDER BY position', (character_id,))
+        r = query(c, 'SELECT cq.typeid, level, starttime, endtime, position, startsp, endsp, updated, s.name\
+                FROM character_queue cq INNER JOIN skills s ON s.typeid = cq.typeid \
+                WHERE characterid = %s ORDER BY position', (character_id,))
         return list(r)
 
 

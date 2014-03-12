@@ -85,27 +85,18 @@ window.addEvent('domready', function() {
 		// Check the cache first
 		if(skillbook.cache[id] == undefined) {
 			// Fetch the list of skills (static)
-			skillbook.api('static/skills', function(skills) {
-				skillbook.static = skills
 				skillbook.cache[id] = {}
 
-				skillbook.api("sheet/" + id, function(sheet) {
-					skillbook.cache[id].sheet = sheet;
-					display_sheet();
-				});
+			skillbook.api("sheet/" + id, function(sheet) {
+				skillbook.cache[id].sheet = sheet;
+				display_sheet();
+
 				skillbook.api("skills/" + id, function(skills) {
-					// Join (hooray client side join) static skill data with this character's SP/level
-					skills.each(function(skill) {
-						_.extend(skill, skillbook.static[skill.typeid]);
-					});
 					skillbook.cache[id].skills = skills;
 					display_skills();
-
 				});
+
 				skillbook.api("queue/" + id, function(queue) {
-					queue.each(function(skill) {
-						_.extend(skill, skillbook.static[skill.typeid]);
-					});
 					skillbook.cache[id].queue = queue;
 					display_queue();
 				});
@@ -184,7 +175,7 @@ window.addEvent('domready', function() {
 					tip = '<b>{name} {level}<br />Finishes:</b> {end}';
 				} else if (start > now) {
 					// Skill fits in 24 hour window, but isn't being trained now
-					skillpercent = Math.min((end-start) - now, 86400000) / 864000;
+					skillpercent = Math.min(end-start, 86400000) / 864000;
 				} else {
 					return; // Skill training completed
 				}
