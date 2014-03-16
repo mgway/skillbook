@@ -70,11 +70,11 @@
 			return ((days > 0)? days+day_s:"") + ((hours > 0)?hours + hour_s: "") + minutes + minute_s + seconds + second_s;
 		},
 		'time_to_complete': function(sheet, skill, current_level, current_sp) {
-			var attr = {164: sheet.charisma + sheet.charismabonus, 
-				165: sheet.intelligence + sheet.intelligencebonus,
-				166: sheet.memory + sheet.memorybonus,
-				167: sheet.perception + sheet.perceptionbonus,
-				168: sheet.willpower + sheet.willpowerbonus};
+			var attr = {164: sheet.charisma, 
+				165: sheet.intelligence,
+				166: sheet.memory,
+				167: sheet.perception,
+				168: sheet.willpower};
 			var attributes = {164:'Charisma', 165:'Intelligence', 166:'Memory', 167:'Perception', 168:'Willpower'};
 
 			var sp_hour = skillbook.sp_hour(attr[skill.primaryattr], attr[skill.secondaryattr]);

@@ -1,10 +1,78 @@
 window.addEvent('domready', function() {
 	skillbook.cache = {}
-	skillbook.static = {}
 	var clocks = [];
-	var total_sp = 0;
-	var estimated_sp = 0;
+	var character = null;
 
+	var rowtemplate = "<td colspan='2'><b>{name}</b><br />SP: {format_sp}/{format_next_sp} ({timeconstant}x)<div class='tooltip'>{tip}</div></td><td class='right'><img src='/static/img/skill{level}.png' /><br />Level {level}</td>";
+	var tiptemplate = '<b>Completed Level:</b> {level}<br /><b>Training time:</b> {format_next_time}<br/><b>Attributes: </b> {training.primary}, {training.secondary} ({training.sp_hour} SP/Hour)<br /><br /><b>Description:</b><br />{description}';
+
+
+	function Character(sheet) {
+		var self = new Object();
+		self.raw = sheet;
+		self.charisma = sheet.charisma + sheet.charismabonus;
+		self.intelligence = sheet.intelligence + sheet.intelligencebonus;
+		self.memory = sheet.memory + sheet.memorybonus;
+		self.perception = sheet.perception + sheet.perceptionbonus;
+        self.willpower = sheet.willpower + sheet.willpowerbonus;
+		self.estimated_sp = 0;
+		self.sp = 0;
+
+		self.draw = function() {
+			var panel = new Element('div', {'class': 'uk-width-1-1 uk-hidden-small'});
+			var list = new Element('dl', {'class': 'uk-description-list uk-description-list-horizontal'});
+			var massaged = {'Bio': this.raw.bio, 'Balance': skillbook.format_isk(this.raw.balance),
+				'Birthday': skillbook.to_localtime(this.raw.birthday).format('LLL'), 
+				'Corporation': this.raw.corporationname, 'Skillpoints': 100, 
+				'Clone': skillbook.format_number(this.raw.clonesp) + " (" + this.raw.clonegrade + ")"
+			}
+
+			_.each(massaged, function(value, key) {
+				list.adopt(new Element('dt', {'html': key}), new Element('dd', {'html': value, 'id': 'sheet_'+key}));
+			});
+			panel.adopt(
+				skillbook.portrait(sheet.characterid, sheet.name, 'Character', 128, 'uk-comment-avatar'), 
+				list
+			);
+			return panel;
+		}
+		self.set_estimated_sp = function(estimated_sp) {
+			self.estimated_sp = estimated_sp;
+			$('sheet_Skillpoints').set('text', skillbook.format_number(self.sp+estimated_sp));
+		}
+		self.set_sp = function(sp) {
+			self.sp = sp;
+			$('sheet_Skillpoints').set('text', skillbook.format_number(sp));
+			$('sheet_Skillpoints').set('title', 'Estimated. API Verified: '+skillbook.format_number(sp));
+		}
+		return self;
+	};
+
+	function Skill(attributes) {
+		var self = new Object();
+		_.each(attributes, function(val, key) {
+			self[key] = val;
+		});
+		self.id = 'skill_' + self.typeid;
+		self.raw = attributes;
+		self.next_sp = skillbook.sp_next_level(self.level, self.timeconstant);
+		self.format_sp = skillbook.format_number(self.skillpoints)
+		self.format_next_sp = skillbook.format_number(self.next_sp);
+		self.format_level = skillbook.roman(self.level);
+		self.description = self.description.replace('\n', '<br />');
+		self.training = skillbook.time_to_complete(character, self, self.level, self.skillpoints);
+		self.format_next_time = skillbook.format_seconds(self.training.seconds);
+		self.is_training = false;
+
+		self.set_training = function(to_level){
+			console.log($(this.id).getElements('img').get('href'));
+		}
+		self.draw_row = function() {
+			this.tip = new Template().substitute(tiptemplate, this);
+			return new Element('tr', {'html': new Template().substitute(rowtemplate, this), 'id': this.id});
+		}
+		return self;
+	};
 
 	if(window.location.hash) {
 		split = window.location.hash.split('/');
@@ -17,15 +85,16 @@ window.addEvent('domready', function() {
 		list_characters();
 	}
 
-
-	function list_characters() {
-		window.location.hash = 'characters';
-
-		// Clean up
+	function clear() {
 		$('pagegrid').empty();
 		$$('table').dispose();
-		$('pagetitle').set('text', 'Characters');
 		clocks.each(function(idx) {clearInterval(idx)});
+	}
+
+	function list_characters() {
+
+		window.location.hash = 'characters';
+		$('pagetitle').set('text', 'Characters');
 
 		skillbook.api('characters', function(characters) {
 			var grid = $('pagegrid');
@@ -89,11 +158,14 @@ window.addEvent('domready', function() {
 				skillbook.cache[id] = {}
 
 			skillbook.api("sheet/" + id, function(sheet) {
-				skillbook.cache[id].sheet = sheet;
+				skillbook.cache[id].sheet = new Character(sheet);
 				display_sheet();
 
 				skillbook.api("skills/" + id, function(skills) {
-					skillbook.cache[id].skills = skills;
+					skillbook.cache[id].skills = [];
+					skills.each(function(skill) {
+						skillbook.cache[id].skills.push(new Skill(skill));
+					});
 					display_skills();
 				});
 
@@ -110,33 +182,16 @@ window.addEvent('domready', function() {
 		clocks.push(setInterval(function(){display_queue()}, 5000));
 
 		function display_sheet() {
-			var sheet = skillbook.cache[id].sheet;
+			character = skillbook.cache[id].sheet;
 
 			// Set up our header
 			var list_chars = new Element('a', {'text': 'Characters', 'style': 'cursor: pointer', 'class': 'uk-link-muted'});
-			var trailer = new Element('span', {'html': ' &raquo; ' + sheet.name});
+			var trailer = new Element('span', {'html': ' &raquo; ' + character.raw.name});
 			list_chars.addEvent('click', list_characters);
 			$('pagetitle').empty().adopt(list_chars, trailer);
 
-			// Set up the character brief
-			var panel = new Element('div', {'class': 'uk-width-1-1 uk-hidden-small'});
-			var list = new Element('dl', {'class': 'uk-description-list uk-description-list-horizontal'});
-			var massaged = {'Bio': sheet.bio, 'Balance': skillbook.format_isk(sheet.balance),
-				'Birthday': skillbook.to_localtime(sheet.birthday).format('LLL'), 
-				'Corporation': sheet.corporationname, 'Skillpoints': 100, 
-				'Clone': skillbook.format_number(sheet.clonesp) + " (" + sheet.clonegrade + ")"
-			}
-
-			_.each(massaged, function(value, key) {
-				list.adopt(new Element('dt', {'html': key}), new Element('dd', {'html': value, 'id': 'sheet_'+key}));
-			});
-
-			panel.adopt(
-				skillbook.portrait(sheet.characterid, sheet.name, 'Character', 128, 'uk-comment-avatar'), 
-				list
-			);
-			var grid = $('pagegrid');
-			grid.grab(panel);
+			// And draw the character panel
+			$('pagegrid').grab(character.draw());
 		}
 
 		function display_skills() {
@@ -147,7 +202,7 @@ window.addEvent('domready', function() {
 				frame.grab(skill_category(skills, key));
 			});
 
-			$('sheet_Skillpoints').set('html', skillbook.format_number(total_sp));
+			character.set_sp(total_sp);
 		}
 
 		function display_queue() {
@@ -214,30 +269,18 @@ window.addEvent('domready', function() {
 				'level': skillbook.roman(current_skill.level)}
 			panel.grab(new Element('table', {'html': new Template().substitute(template, data), 'id': 'current_train'}));
 			grid.grab(panel);
-			$('sheet_Skillpoints').set('text', skillbook.format_number(total_sp+estimated_sp));
-			$('sheet_Skillpoints').set('title', "Estimated. API verified: " + skillbook.format_number(total_sp) + " SP");
+			character.set_estimated_sp(estimated_sp);
 		}
 
 		function skill_category(skills, header) {
-			var rowtemplate = "<td colspan='2'><b>{name}</b><br />SP: {sp} ({timeconstant}x)<div class='tooltip'>{tip}</div></td><td class='right'><img src='/static/img/skill{level}.png' /><br />Level {level}</td>";
 			var headertemplate = "<tr style='cursor: pointer'><th style='width: 40%'>{h}</th><th style='width: 40%'><small>{count} skills &mdash; {sp} points</small></th><th>&nbsp;</th></tr>";
-			var tiptemplate = '<b>Completed Level:</b> {level}<br /><b>Training time:</b> {time}<br/><b>Attributes: </b> {training.primary}, {training.secondary} ({training.sp_hour} SP/Hour)<br /><br /><b>Description:</b><br />{description}';
 			var table = new Element('table', {'class': 'uk-table uk-table-striped uk-table-condensed skills', 'style':'padding-bottom: 10px'});
 			var tbody = new Element('tbody');
 			var category_sp = 0;
 
 			_.sortBy(skills, function(skill) { return skill.name }).each(function(skill) {
-				category_sp += skill.skillpoints
-				skill.sp = skillbook.format_number(skill.skillpoints) + '/' + 
-					skillbook.format_number(skillbook.sp_next_level(skill.level, skill.timeconstant));
-			
-				var response = skillbook.time_to_complete(skillbook.cache[id].sheet, skill, skill.level, skill.skillpoints);
-				var data = {'level': skillbook.roman(skill.level), 'time': skillbook.format_seconds(response['seconds']),
-					'description': skill.description.replace('\n', '<br />'), 'training': response};
-				skill.tip = new Template().substitute(tiptemplate, data);
-
-				var row = new Element('tr', {'html': new Template().substitute(rowtemplate, skill), 'id': 'skill_'+skill.typeid});
-				tbody.grab(row);
+				tbody.grab(skill.draw_row());
+				category_sp += skill.skillpoints;
 			});
 
 			total_sp += category_sp;
