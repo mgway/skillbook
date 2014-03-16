@@ -3,6 +3,7 @@ window.addEvent('domready', function() {
 	skillbook.static = {}
 	var clocks = [];
 	var total_sp = 0;
+	var estimated_sp = 0;
 
 
 	if(window.location.hash) {
@@ -36,21 +37,21 @@ window.addEvent('domready', function() {
 				var row = new Element('div', {'class': 'uk-width-1-1 uk-width-medium-1-1 uk-width-large-1-2', 'style':'padding-bottom: 10px'});
 				var article = new Element('article', {'class': 'uk-comment'});
 				var header = new Element('header', {'class': 'uk-comment-header'});
-				var data = char['corporationname'] + "<br />" + skillbook.format_isk(char['balance']);
-				if(char['training_end']) {
-					var rowid = "timer_" + char['characterid'];
+				var data = char.corporationname + "<br />" + skillbook.format_isk(char.balance);
+				if(char.training_end) {
+					var rowid = "timer_" + char.characterid;
 					data += "<br />Queue finishes in <span id='"+rowid+"'></span>";
-					clocks.push(setInterval(function(){update_timer(rowid, char['training_end'])}, 500));
+					clocks.push(setInterval(function(){update_timer(rowid, char.training_end)}, 500));
 				}
 				header.adopt(
-					skillbook.portrait(char['characterid'], char['name'], 'Character', 128, 'uk-comment-avatar'), 
-					new Element('h4', {'html': char['name'], 'class': 'uk-comment-title'}),
+					skillbook.portrait(char.characterid, char.name, 'Character', 128, 'uk-comment-avatar'), 
+					new Element('h4', {'html': char.name, 'class': 'uk-comment-title'}),
 					new Element('div', {'html': data, 'class': 'uk-comment-meta'})
 				);
 				article.grab(header);
 				row.grab(article);
 				row.addEvent('click', function(e) {
-					show_character(char['characterid']);
+					show_character(char.characterid);
 				});
 				return row;
 			}
@@ -120,10 +121,10 @@ window.addEvent('domready', function() {
 			// Set up the character brief
 			var panel = new Element('div', {'class': 'uk-width-1-1 uk-hidden-small'});
 			var list = new Element('dl', {'class': 'uk-description-list uk-description-list-horizontal'});
-			var massaged = {'Bio': sheet['bio'], 'Balance': skillbook.format_isk(sheet['balance']),
-				'Birthday': skillbook.to_localtime(sheet['birthday']).format('LLL'), 
-				'Corporation': sheet['corporationname'], 'Skillpoints': 100, 
-				'Clone': skillbook.format_number(sheet['clonesp']) + " (" + sheet['clonegrade'] + ")"
+			var massaged = {'Bio': sheet.bio, 'Balance': skillbook.format_isk(sheet.balance),
+				'Birthday': skillbook.to_localtime(sheet.birthday).format('LLL'), 
+				'Corporation': sheet.corporationname, 'Skillpoints': 100, 
+				'Clone': skillbook.format_number(sheet.clonesp) + " (" + sheet.clonegrade + ")"
 			}
 
 			_.each(massaged, function(value, key) {
@@ -131,7 +132,7 @@ window.addEvent('domready', function() {
 			});
 
 			panel.adopt(
-				skillbook.portrait(sheet['characterid'], sheet['name'], 'Character', 128, 'uk-comment-avatar'), 
+				skillbook.portrait(sheet.characterid, sheet.name, 'Character', 128, 'uk-comment-avatar'), 
 				list
 			);
 			var grid = $('pagegrid');
@@ -158,8 +159,14 @@ window.addEvent('domready', function() {
 				panel.empty();
 			}
 
+			// Bail if the queue is empty
+			if (queue.length == 0)
+				return;
+
 			var table = new Element('table', {'style': 'width: 100%', 'id': 'queue'});
 			var row = new Element('tr');
+
+			estimated_sp = 0;
 
 			var current_skill; 
 			queue.each(function(skill) {
@@ -168,6 +175,9 @@ window.addEvent('domready', function() {
 				var now = moment();
 				var skillpercent;
 				var tip = '<b>{name} {level}<br />Starts:</b> {start}<br/><b>Finishes:</b> {end}';
+
+				estimated_sp += skillbook.estimate_sp(skill.startsp, skill.endsp, skill.starttime, skill.endtime);
+
 				if(start < now && end > now) {
 					// Skill is being trained now
 					skillpercent = Math.min(end - now, 86400000) / 864000;
@@ -182,7 +192,7 @@ window.addEvent('domready', function() {
 				var td = new Element('td', {'style':'width: '+skillpercent+'%;', 'html':'&nbsp;'});
 				var data = {'name': skill.name, 'level': skillbook.roman(skill.level), 'start': start.format('LLLL'), 'end': end.format('LLLL')};
 				td.grab(new Element('span', {'class': 'tooltip', 'html': new Template().substitute(tip, data)}));
-				row.adopt(td)
+				row.adopt(td);
 			});
 			
 			var endTime = skillbook.to_localtime(queue.getLast().endtime);
@@ -204,6 +214,8 @@ window.addEvent('domready', function() {
 				'level': skillbook.roman(current_skill.level)}
 			panel.grab(new Element('table', {'html': new Template().substitute(template, data), 'id': 'current_train'}));
 			grid.grab(panel);
+			$('sheet_Skillpoints').set('text', skillbook.format_number(total_sp+estimated_sp));
+			$('sheet_Skillpoints').set('title', "Estimated. API verified: " + skillbook.format_number(total_sp) + " SP");
 		}
 
 		function skill_category(skills, header) {

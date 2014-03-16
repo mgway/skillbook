@@ -82,6 +82,20 @@
 			var response = {'seconds': (sp_required/sp_hour) * 3600, 'sp_hour': sp_hour, 'sp_required': sp_required, 
 				'primary': attributes[skill.primaryattr], 'secondary': attributes[skill.secondaryattr]};
 			return response;
+		},
+		'estimate_sp': function(start_sp, end_sp, start_time, end_time) {
+			var total = end_sp - start_sp;
+
+			// This item is already completed, so we've presumably obtained all of the SP for it
+			if(new Date(end_time) < new Date()) {
+				return total;
+			} else if (new Date(start_time) <= new Date()) {
+				var elapsed = (new Date() - new Date(start_time))/1000;
+				var total_time = (new Date(end_time) - new Date(start_time))/1000;
+				return Math.floor((total/total_time) * elapsed);
+			}
+
+			return 0;
 		}
 	});
 })();

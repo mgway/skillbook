@@ -116,7 +116,7 @@ dl {
 	color: #333;
 	z-index: 1;
 	pointer-events: none;
-	min-width: 80px;
+	min-width: 150px;
 	max-width: 500px;
 	overflow: wrap;
 }
