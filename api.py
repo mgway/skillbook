@@ -21,9 +21,12 @@ def perform_updates(key_id=None):
                 # don't care to update that often
                 data.cached_until = data.cached_until + datetime.timedelta(minutes=15)
                 db.save_character_sheet(data)
+                cache.remove("*:sheet:%s" % row.characterid)
+                cache.remove("*:skills:%s" % row.characterid)
             elif row.method == 'SkillQueue':
                 data = eveapi.skill_queue(row.keyid, row.vcode, row.keymask, row.characterid)
                 db.save_skill_queue(row.characterid, data.skillqueue)
+                cache.remove("*:queue:%s" % row.characterid)
             else:
                 raise SkillbookException('Unknown API method %s' % row.method)
 
@@ -63,10 +66,10 @@ def add_key(user_id, key_id, vcode):
     db.add_key(user_id, key_id, vcode, mask, characters.key.characters.rows)
     db.add_grants(key_id, grants, characters.key.characters.rows)
     perform_updates(key_id=key_id)
-    cache.remove('characters:%s' % user_id)
+    cache.remove('*:characters:%s' % user_id)
 
 
-@cached('characters', arg_pos=0)
+@cached('characters', arg_pos=0, expires=240)
 def get_characters(userid):
     return [char.raw for char in db.get_character_briefs(userid)]
 

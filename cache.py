@@ -61,7 +61,7 @@ def remove(key):
     r.delete(r.keys(key))
 
 
-def cached(key, arg_pos=None, kwarg_name=None, method='json'):
+def cached(key, arg_pos=None, kwarg_name=None, method='json', expires=900):
     def wrap(fn, *args, **kwargs):
         def wrapped_fn(*args, **kwargs):
 
@@ -76,7 +76,7 @@ def cached(key, arg_pos=None, kwarg_name=None, method='json'):
             data = fetch(full_key, result=method)
             if not data:
                 result = fn(*args, **kwargs)
-                data = store(full_key, result, method=method)
+                data = store(full_key, result, method=method, expires=expires)
             return data
         return wrapped_fn
     return wrap
