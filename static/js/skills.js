@@ -225,7 +225,7 @@ window.addEvent('domready', function() {
 			var headertemplate = "<tr style='cursor: pointer'><th style='width: 40%'>{h}</th><th style='width: 40%'><small>{count} skills &mdash; {sp} points</small></th><th>&nbsp;</th></tr>";
 			var tiptemplate = '<b>Completed Level:</b> {level}<br /><b>Training time:</b> {time}<br/><b>Attributes: </b> {training.primary}, {training.secondary} ({training.sp_hour} SP/Hour)<br /><br /><b>Description:</b><br />{description}';
 			var table = new Element('table', {'class': 'uk-table uk-table-striped uk-table-condensed skills', 'style':'padding-bottom: 10px'});
-			var tbody = new Element('tbody');
+			var tbody = new Element('tbody', {'style': 'display: none;'});
 			var category_sp = 0;
 
 			_.sortBy(skills, function(skill) { return skill.name }).each(function(skill) {
@@ -247,7 +247,11 @@ window.addEvent('domready', function() {
 			var data = {'h': skills[0].groupname, 'sp': skillbook.format_number(category_sp), 'count': skills.length};
 			var thead = new Element('thead', {'html': new Template().substitute(headertemplate, data)});
 			thead.addEvent('click', function(e) {
-				tbody.toggle();
+				if(tbody.isDisplayed()) {
+					tbody.hide();
+				} else {
+					tbody.setStyle('display', 'table-row-group');
+				}
 			});
 
 			table.adopt(thead, tbody);
