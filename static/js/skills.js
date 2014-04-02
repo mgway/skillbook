@@ -79,7 +79,7 @@ window.addEvent('domready', function() {
 
 	function show_character(id) {
 		// First, kill our timers
-		clocks.each(function(idx) {clearInterval(idx)});
+		clocks.each(clearInterval);
 
 		// Push the character id onto the hash for bookmarking purposes (or something)
 		window.location.hash = 'character/' + id;

@@ -9,12 +9,6 @@
 				'onFailure': function(xhr) {
 					alert("API GET failure: " + xhr);
 				},
-				'onComplete': function() {
-					var loading = $('loading');
-					if(loading) {
-						loading.setStyle('display', 'none');
-					}
-				},
 			}).get();
 		},
 		'portrait': function(id, text, img_dir, size, cls) {
