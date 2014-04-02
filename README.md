@@ -9,7 +9,7 @@ Requirements
 * postgresql-server-dev-X.Y
 * python >= 3.3
 * redis >= 2.6
-* virtualenv is nice to have but isn't strictly required
+* venv is nice to have but isn't strictly required
 
 **For production:**
 
@@ -40,8 +40,8 @@ Create the user and database:
  
 Load the schema and static data:
 
-	$ psql eveskill < setup/schema.sql
-	$ psql eveskill < setup/data.sql
+	$ bunzip2 -c setup/schema.sql.bz2 | psql -U eveskill
+	$ bunzip2 -c setup/data.sql.bz2 | psql -U eveskill
 
 
 Server setup
