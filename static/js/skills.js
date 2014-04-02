@@ -7,22 +7,23 @@ window.addEvent('domready', function() {
 	var total_sp = 0;
 	var estimated_sp = 0;
 
-
-	if(window.location.hash) {
-		var split = window.location.hash.split('/');
-		if(split[0] == '#character') {
-			show_character(split[1]);
+	function hash_changed() {
+		if(window.location.hash) {
+			var split = window.location.hash.split('/');
+			if(split[0] == '#character') {
+				show_character(split[1]);
+			} else {
+				list_characters();
+			}
 		} else {
 			list_characters();
 		}
-	} else {
-		list_characters();
 	}
+	window.onhashchange = hash_changed;
+	hash_changed();
 
 
 	function list_characters() {
-		window.location.hash = 'characters';
-
 		// Clean up
 		$('pagegrid').empty();
 		$$('table').dispose();
@@ -53,7 +54,7 @@ window.addEvent('domready', function() {
 				article.grab(header);
 				row.grab(article);
 				row.addEvent('click', function(e) {
-					show_character(char.characterid);
+					window.location.hash = 'character/' + char.characterid;
 				});
 				return row;
 			}
@@ -81,8 +82,6 @@ window.addEvent('domready', function() {
 		// First, kill our timers
 		clocks.each(clearInterval);
 
-		// Push the character id onto the hash for bookmarking purposes (or something)
-		window.location.hash = 'character/' + id;
 		$('pagegrid').empty();
 
 		// Check the cache first
@@ -117,7 +116,9 @@ window.addEvent('domready', function() {
 			// Set up our header
 			var list_chars = new Element('a', {'text': 'Characters', 'style': 'cursor: pointer', 'class': 'uk-link-muted'});
 			var trailer = new Element('span', {'html': ' &raquo; ' + sheet.name});
-			list_chars.addEvent('click', list_characters);
+			list_chars.addEvent('click', function() {
+				window.location.hash = 'characters';
+			});
 			$('pagetitle').empty().adopt(list_chars, trailer);
 
 			// Set up the character brief
