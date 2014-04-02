@@ -1,4 +1,6 @@
 (function() {
+	'use strict';
+
 	Object.append(window.skillbook, {
 		'api': function(path, cb) {
 			new Request.JSON({
@@ -9,15 +11,17 @@
 				},
 				'onComplete': function() {
 					var loading = $('loading');
-					if (loading)
+					if(loading) {
 						loading.setStyle('display', 'none');
-					},
+					}
+				},
 			}).get();
 		},
 		'portrait': function(id, text, img_dir, size, cls) {
 			var extension = 'png';
-			if (img_dir == 'Character')
+			if(img_dir == 'Character') {
 				extension = 'jpg';
+			}
 			var img = new Element('img', {
 				'src': 'https://image.eveonline.com/' + img_dir + '/' + id + '_' + size + '.' + extension,
 				'alt': text,
@@ -29,17 +33,17 @@
 		},
 		'format_isk': function(number) {
 			if(number != null) {
-				i = parseInt(number = Math.abs(number).toFixed(2)) + '', 
-				j = ((j = i.length) > 3) ? j % 3 : 0; 
+				var i = parseInt(number = Math.abs(number).toFixed(2)) + '';
+				var j = ((j = i.length) > 3) ? j % 3 : 0;
 				return (j ? i.substr(0, j) + ',' : '') + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + ',')
-			   		+ ('.' + Math.abs(number - i).toFixed(2).slice(2)) + " ISK";
+					+ ('.' + Math.abs(number - i).toFixed(2).slice(2)) + " ISK";
 			} else {
 				return "(0 ISK)";
 			}
 		},
 		'format_number': function(number) {
-			i = parseInt(number = Math.abs(number)) + '', 
-			j = ((j = i.length) > 3) ? j % 3 : 0; 
+			var i = parseInt(number = Math.abs(number)) + '';
+			var j = ((j = i.length) > 3) ? j % 3 : 0;
 			return (j ? i.substr(0, j) + ',' : '') + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + ',');
 		},
 		'sp_hour': function(primary, secondary) {
@@ -55,10 +59,11 @@
 		'roman': function(number) {
 			// The elusive roman numeral zero
 			return [0, 'I', 'II', 'III', 'IV', 'V'][number];
-		}, 
+		},
 		'format_seconds': function(seconds) {
-			if (seconds == 0)
-				return "None"
+			if(seconds == 0) {
+				return "None";
+			}
 			var days = parseInt(seconds / 86400) % 30;
 			var hours = parseInt(seconds / 3600) % 24;
 			var minutes = parseInt(seconds / 60) % 60;
@@ -89,7 +94,7 @@
 			// This item is already completed, so we've presumably obtained all of the SP for it
 			if(new Date(end_time) < new Date()) {
 				return total;
-			} else if (new Date(start_time) <= new Date()) {
+			} else if(new Date(start_time) <= new Date()) {
 				var elapsed = (new Date() - new Date(start_time))/1000;
 				var total_time = (new Date(end_time) - new Date(start_time))/1000;
 				return Math.floor((total/total_time) * elapsed);

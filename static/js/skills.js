@@ -1,4 +1,6 @@
 window.addEvent('domready', function() {
+	'use strict';
+
 	skillbook.cache = {}
 	skillbook.static = {}
 	var clocks = [];
@@ -7,11 +9,11 @@ window.addEvent('domready', function() {
 
 
 	if(window.location.hash) {
-		split = window.location.hash.split('/');
+		var split = window.location.hash.split('/');
 		if(split[0] == '#character') {
 			show_character(split[1]);
 		} else {
-			list_characters();	
+			list_characters();
 		}
 	} else {
 		list_characters();
@@ -44,7 +46,7 @@ window.addEvent('domready', function() {
 					clocks.push(setInterval(function(){update_timer(rowid, char.training_end)}, 500));
 				}
 				header.adopt(
-					skillbook.portrait(char.characterid, char.name, 'Character', 128, 'uk-comment-avatar'), 
+					skillbook.portrait(char.characterid, char.name, 'Character', 128, 'uk-comment-avatar'),
 					new Element('h4', {'html': char.name, 'class': 'uk-comment-title'}),
 					new Element('div', {'html': data, 'class': 'uk-comment-meta'})
 				);
@@ -57,14 +59,14 @@ window.addEvent('domready', function() {
 			}
 
 			function update_timer(id, endTime) {
-				// This is rough, but we use moment and moment-precise to display the queue end time 
+				// This is rough, but we use moment and moment-precise to display the queue end time
 				// (provided by the api as a UTC timestamp) as months/days/hours/minutes
-				element = $(id);
+				var element = $(id);
 				var offset = new Date().getTimezoneOffset();
 				var endTime = moment(endTime).subtract('minutes', offset);
 				var delta = endTime - new Date().getTime();
 				element.title = endTime.format('LLLL');
-				element.innerText = endTime.preciseDiff(moment())
+				element.innerText = endTime.preciseDiff(moment());
 				if(delta < 86400000) {
 					element.setStyle('color', 'red');
 					if(delta < 0) {
@@ -86,7 +88,7 @@ window.addEvent('domready', function() {
 		// Check the cache first
 		if(skillbook.cache[id] == undefined) {
 			// Fetch the list of skills (static)
-				skillbook.cache[id] = {}
+			skillbook.cache[id] = {}
 
 			skillbook.api("sheet/" + id, function(sheet) {
 				skillbook.cache[id].sheet = sheet;
@@ -122,8 +124,8 @@ window.addEvent('domready', function() {
 			var panel = new Element('div', {'class': 'uk-width-1-1 uk-hidden-small'});
 			var list = new Element('dl', {'class': 'uk-description-list uk-description-list-horizontal'});
 			var massaged = {'Bio': sheet.bio, 'Balance': skillbook.format_isk(sheet.balance),
-				'Birthday': skillbook.to_localtime(sheet.birthday).format('LLL'), 
-				'Corporation': sheet.corporationname, 'Skillpoints': 100, 
+				'Birthday': skillbook.to_localtime(sheet.birthday).format('LLL'),
+				'Corporation': sheet.corporationname, 'Skillpoints': 100,
 				'Clone': skillbook.format_number(sheet.clonesp) + " (" + sheet.clonegrade + ")"
 			}
 
@@ -132,7 +134,7 @@ window.addEvent('domready', function() {
 			});
 
 			panel.adopt(
-				skillbook.portrait(sheet.characterid, sheet.name, 'Character', 128, 'uk-comment-avatar'), 
+				skillbook.portrait(sheet.characterid, sheet.name, 'Character', 128, 'uk-comment-avatar'),
 				list
 			);
 			var grid = $('pagegrid');
@@ -143,7 +145,7 @@ window.addEvent('domready', function() {
 			total_sp = 0;
 			var groups = _.groupBy(skillbook.cache[id].skills, function(skill){ return skill.groupname });
 			var frame = $('frame');
-			_.sortBy(groups, function(group) { return group[0].groupname }).each(function(skills, key) { 
+			_.sortBy(groups, function(group) { return group[0].groupname }).each(function(skills, key) {
 				frame.grab(skill_category(skills, key));
 			});
 
@@ -168,7 +170,7 @@ window.addEvent('domready', function() {
 
 			estimated_sp = 0;
 
-			var current_skill; 
+			var current_skill;
 			queue.each(function(skill) {
 				var start = skillbook.to_localtime(skill.starttime);
 				var end = skillbook.to_localtime(skill.endtime);
@@ -194,7 +196,7 @@ window.addEvent('domready', function() {
 				td.grab(new Element('span', {'class': 'tooltip', 'html': new Template().substitute(tip, data)}));
 				row.adopt(td);
 			});
-			
+
 			var endTime = skillbook.to_localtime(queue.getLast().endtime);
 			if (endTime - moment() < 86400000) {
 				var empty = new Element('td', {'class': 'error', 'style': 'background-color: #842107', 'html': '&nbsp'});
@@ -209,8 +211,8 @@ window.addEvent('domready', function() {
 			var template = "<tr><td>Currently Training:</td><td><strong>{name}</strong> {level}</td></tr><tr><td></td><td>{end}</td></tr><tr><td></td><td>{delta}</td></tr>";
 			table.adopt(row);
 			panel.adopt(table);
-			var end = skillbook.to_localtime(current_skill.endtime); 
-			var data = {'name': current_skill.name, 'end': end.format('LLLL'), 'delta': end.preciseDiff(moment()), 
+			var end = skillbook.to_localtime(current_skill.endtime);
+			var data = {'name': current_skill.name, 'end': end.format('LLLL'), 'delta': end.preciseDiff(moment()),
 				'level': skillbook.roman(current_skill.level)}
 			panel.grab(new Element('table', {'html': new Template().substitute(template, data), 'id': 'current_train'}));
 			grid.grab(panel);
@@ -227,10 +229,10 @@ window.addEvent('domready', function() {
 			var category_sp = 0;
 
 			_.sortBy(skills, function(skill) { return skill.name }).each(function(skill) {
-				category_sp += skill.skillpoints
-				skill.sp = skillbook.format_number(skill.skillpoints) + '/' + 
+				category_sp += skill.skillpoints;
+				skill.sp = skillbook.format_number(skill.skillpoints) + '/' +
 					skillbook.format_number(skillbook.sp_next_level(skill.level, skill.timeconstant));
-			
+
 				var response = skillbook.time_to_complete(skillbook.cache[id].sheet, skill, skill.level, skill.skillpoints);
 				var data = {'level': skillbook.roman(skill.level), 'time': skillbook.format_seconds(response['seconds']),
 					'description': skill.description.replace('\n', '<br />'), 'training': response};
@@ -248,7 +250,7 @@ window.addEvent('domready', function() {
 				tbody.toggle();
 			});
 
-			table.adopt(thead, tbody)
+			table.adopt(thead, tbody);
 			return table;
 		}
 	}
