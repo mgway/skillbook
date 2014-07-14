@@ -32,6 +32,10 @@ body {
 	font-weight: bold;
 }
 
+.phony {
+    cursor: pointer;
+}
+
 #frame {
 	padding-top: 20px;
 }
@@ -50,7 +54,7 @@ table.skills td {
 	position: relative;
 }
 
-table.skills td:hover .tooltip {
+table.skills td:hover .tooltip-wrap {
 	display: block;
 }
 
@@ -77,11 +81,14 @@ tr.training {
 }
 
 dl {
-	margin-top: 0px;
+	margin-top: 0;
 }
 
 /* Skill queue block */
-#current_train td {
+#skillqueue {
+    padding-bottom: 10px;
+}
+#current-train td {
 	padding-right: 10px;
 }
 
@@ -107,8 +114,7 @@ dl {
 .tooltip {
 	display: none;
 	position: absolute;
-	top: 32px;
-	left: 8px;
+	top: 25px;
 	line-height: 1.5em;
 	padding: 8px 10px;
 	background-color: #f5f5f5;
@@ -118,5 +124,20 @@ dl {
 	pointer-events: none;
 	min-width: 150px;
 	max-width: 500px;
-	overflow: wrap;
+	white-space: nowrap
+}
+
+.tooltip-wrap {
+	display: none;
+	position: absolute;
+	top: 25px;
+	line-height: 1.5em;
+	padding: 8px 10px;
+	background-color: #f5f5f5;
+	border: 1px solid rgba(0, 0, 0, 0.06);
+	color: #333;
+	z-index: 1;
+	pointer-events: none;
+	min-width: 150px;
+	max-width: 500px;
 }

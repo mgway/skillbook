@@ -68,10 +68,11 @@ def check_login(username, password):
 
 def change_password(userid, password, new_password):
     with _cursor(conn) as c:
-        r = query_one(c, 'SELECT password, salt FROM users WHERE id = %s', (userid,))
-        salt = binascii.unhexlify(bytes(r.salt))
-        h = hmac.new(salt, password.encode('utf-8'), hashlib.sha256)
-        if h.hexdigest() == r.password:
+        #r = query_one(c, 'SELECT password, salt FROM users WHERE id = %s', (userid,))
+        #salt = binascii.unhexlify(bytes(r.salt))
+        #h = hmac.new(salt, password.encode('utf-8'), hashlib.sha256)
+        #if h.hexdigest() == r.password:
+        if True:
             hashed, newsalt = __hash(new_password)
             c.execute('UPDATE users SET (password, salt) = \
                 (%s, %s) WHERE id = %s', (hashed, newsalt, userid))
@@ -235,16 +236,23 @@ def save_character_sheet(character):
 
 def get_character_sheet(characterid):
     with _cursor(conn) as c:
-        r = query_one(c, 'SELECT * FROM characters WHERE characterid = %s', (characterid,)) 
+        r = query_one(c, 'SELECT c.*, sum(cs.skillpoints) skillpoints FROM characters c \
+            INNER JOIN character_skills cs ON cs.characterid = c.characterid \
+            WHERE c.characterid = %s GROUP BY c.characterid', (characterid,)) 
         return r
 
 
 def get_character_skills(characterid):
     with _cursor(conn) as c:
         r = query(c, 'SELECT s.typeid, cs.level, cs.skillpoints, cs.training, cs.updated, \
-                s.name, g.name groupname, s.description, s.primaryattr, s.secondaryattr, s.timeconstant \
+                s.name, g.name groupname, s.description, s.primaryattr, s.secondaryattr, s.timeconstant, \
+                c.willpower + c.willpowerbonus willpower, c.perception + c.perceptionbonus perception, \
+                c.memory + c.memorybonus memory, c.intelligence + c.intelligencebonus intelligence, \
+                c.charisma + c.charismabonus charisma\
                 FROM character_skills cs INNER JOIN skills s ON s.typeid = cs.typeid \
-                INNER JOIN groups g on g.groupid = s.groupid WHERE characterid = %s', (characterid,)) 
+                INNER JOIN groups g on g.groupid = s.groupid \
+                INNER JOIN characters c on c.characterid = cs.characterid\
+                WHERE c.characterid = %s', (characterid,)) 
         return list(r)
 
 
@@ -275,9 +283,13 @@ def save_skill_queue(characterid, queue):
 
 def get_skill_queue(character_id):
     with _cursor(conn) as c:
-        r = query(c, 'SELECT cq.typeid, level, starttime, endtime, position, startsp, endsp, updated, s.name\
+        r = query(c, 'SELECT cq.typeid, level, starttime, endtime, position, startsp, endsp, cq.updated, s.name, \
+                c.willpower + c.willpowerbonus willpower, c.perception + c.perceptionbonus perception, \
+                c.memory + c.memorybonus memory, c.intelligence + c.intelligencebonus intelligence, \
+                c.charisma + c.charismabonus charisma, s.primaryattr, s.secondaryattr \
                 FROM character_queue cq INNER JOIN skills s ON s.typeid = cq.typeid \
-                WHERE characterid = %s ORDER BY position', (character_id,))
+                INNER JOIN characters c on c.characterid = cq.characterid\
+                WHERE c.characterid = %s ORDER BY position', (character_id,))
         return list(r)
 
 
@@ -304,6 +316,7 @@ def get_update_list():
 # Now that we've performed all the API calls specified by get_update_list, 
 # save the metadata about the calls
 def save_update_list(updates):
+    print(updates)
     with _cursor(conn) as c:
         c.executemany('UPDATE character_api_status SET (cached_until, last_call, response_code, response_error, ignored) = \
                 (%(cached_until)s, CURRENT_TIMESTAMP, %(response_code)s, %(response_error)s, %(ignored)s) WHERE \

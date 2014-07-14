@@ -163,7 +163,7 @@ class SettingsPasswordHandler(BaseHandler):
 
 
 class AjaxHandler(BaseHandler):
-    def write_message(self, message, pre=False):
+    def write_message(self, message, pre=True):
         def json_handler(obj):
             if hasattr(obj, 'isoformat'):
                 return obj.isoformat()
@@ -184,22 +184,22 @@ class DynamicAjaxHandler(AjaxHandler):
         try:
             if command == 'characters':
                 characters = api.get_characters(userid)
-                self.write_message(characters, pre=True)
+                self.write_message(characters)
             elif command == 'sheet':
                 sheet = api.get_character_sheet(userid, arg)
-                self.write_message(sheet, pre=True)
+                self.write_message(sheet)
             elif command == 'skills':
                 skills = api.get_character_skills(userid, arg)
-                self.write_message(skills, pre=True)
+                self.write_message(skills)
             elif command == 'queue':
                 skills = api.get_character_queue(userid, arg)
-                self.write_message(skills, pre=True)
+                self.write_message(skills)
             else:
                 print('unhandled command: ' + str(command))
 
         except api.SkillbookException as e:
             self.set_status(403, e.message)
-            self.write_message({'error': e.message})
+            self.write_message({'error': e.message}, pre=False)
 
 
 class StaticAjaxHandler(AjaxHandler):
@@ -207,7 +207,7 @@ class StaticAjaxHandler(AjaxHandler):
         args = self.get_argument('args', '')
 
         if command == 'skills':
-            self.write_message(api.get_skills(), pre=True)
+            self.write_message(api.get_skills())
         else:
             print('unhandled command: ' + str(command))
 

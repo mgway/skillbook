@@ -20,7 +20,7 @@ def character_sheet(id, code, mask, character):
     
     # Fix up the data a little bit
     query.birthday = datetime.strptime(query.dob, '%Y-%m-%d %H:%M:%S')
-    query.bio = ' - '.join([query.race, query.gender, query.bloodline, query.ancestry])
+    query.bio = ' - '.join([query.gender, query.race, query.bloodline, query.ancestry])
     query.memory = query.attributes.memory
     query.intelligence = query.attributes.intelligence
     query.perception = query.attributes.perception

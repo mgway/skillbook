@@ -1,0 +1,32 @@
+{
+  "name": "flight-schedule",
+  "version": "0.0.1",
+  "dependencies": {
+    "flight": "~1.0.9"
+  },
+  "devDependencies": {
+    "jasmine-flight": "*",
+    "jasmine-jquery": "*"
+  },
+  "ignore": [
+    ".gitignore",
+    ".gitattributes",
+    ".travis.yml",
+    "CONTRIBUTING.md",
+    "CHANGELOG.md",
+    "test",
+    "package.json",
+    "karma.conf.js"
+  ],
+  "homepage": "https://github.com/tbrd/flight-schedule",
+  "_release": "0.0.1",
+  "_resolution": {
+    "type": "version",
+    "tag": "v0.0.1",
+    "commit": "d3109063000f49d9f970548a54656176f0128156"
+  },
+  "_source": "git://github.com/tbrd/flight-schedule.git",
+  "_target": "~0.0.1",
+  "_originalSource": "flight-schedule",
+  "_direct": true
+}

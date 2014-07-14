@@ -36,21 +36,24 @@
 	</div>
 {% end %}
 {% block js %}
+<script type="text/javascript" src="/bower_components/jquery/dist/jquery.js"></script>
 <script type="text/javascript">
+$(document).ready(function () {
 	var showLogin = function() {
 		$('register').hide(); 
 		$('login').toggle();
 		$('login_username').focus();
-	}
+	};
 	var showRegistration = function() {
 		$('login').hide(); 
 		$('register').toggle();
 		$('reg_username').focus();
-	}
-	$('loginLink').addEvent('click', function() { showLogin() });
-	$('registerLink').addEvent('click', function() { showRegistration() });
+	};
+	$('loginLink').click(function() { showLogin() });
+	$('registerLink').click(function() { showRegistration() });
 	if(document.URL.contains('activity=login')) { showLogin() }
 	if(document.URL.contains('activity=register')) { showRegistration()}
+});
 </script>
 {% end %}
 

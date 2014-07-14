@@ -1,0 +1,20 @@
+{{#characters}}
+<div class="uk-width-1-1 uk-width-medium-1-1 uk-width-large-1-2" style="padding-bottom: 10px">
+    <article class="uk-comment phony" id="character_{{characterid}}">
+        <header class="uk-comment-header">
+            <img class="uk-comment-avatar" src="https://image.eveonline.com/Character/{{characterid}}_128.jpg" alt={{name}} />
+            <h4 class="uk-comment-title">{{name}}</h4>
+            <div class="uk-comment-meta">
+                {{corporationname}}<br />
+                {{commas balance}} ISK<br />
+                {{#if training_end}}
+                    Queue finishes in: {{timeDifference 'now' training_end}}<br />
+                    {{formatTime training_end}}
+                {{else}}
+                    No skill in training
+                {{/if}}
+            </div>
+        </header>
+    </article>
+</div>
+{{/characters}}
