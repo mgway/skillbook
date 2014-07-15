@@ -8,13 +8,19 @@ define(
         return defineComponent(characterSkills);
         
         function characterSkills() {
-		
+
+            var lastRefreshTime;
+            
             this.defaultAttrs({
                 clickSelector: 'thead',
             });
             
             this.render = function(e, data) {
-                this.$node.html(template(data));
+                // Don't constantly re-render
+                if(lastRefreshTime != data.refreshTime) {
+                    lastRefreshTime = data.refreshTime;
+                    this.$node.html(template(data));
+                }
             };
             
             this.hide = function(e, data) {

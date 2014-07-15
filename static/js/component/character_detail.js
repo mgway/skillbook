@@ -8,9 +8,14 @@ define(
         return defineComponent(characterDetail);
         
         function characterDetail () {
-		
+            var lastRefreshTime;
+            
             this.render = function(e, data) {
-                this.$node.html(template(data.character));
+                // Don't constantly re-render
+                if(lastRefreshTime != data.refreshTime) {
+                    lastRefreshTime = data.refreshTime;
+                    this.$node.html(template(data.character));
+                }
             };
             
             this.hide = function(e, data) {

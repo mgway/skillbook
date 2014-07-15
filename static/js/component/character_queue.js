@@ -11,13 +11,15 @@ define(
 
             this.render = function(e, data) {
                 this.$node.html(template(data));
+                
+                var that = this;
+                data.queue.forEach(function(skill) {
+                    that.trigger(document, 'uiSetSkillInTraining', skill);
+                });
             };
             
             this.hide = function(e, data) {
                 this.$node.empty();
-                this.trigger('schedule-cancel', {
-                    eventName: 'uiQueueRefresh'
-                });
             };
            
             this.after('initialize', function() {

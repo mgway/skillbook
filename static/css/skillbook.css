@@ -1,17 +1,31 @@
-body {
+html {
 	overflow-y: scroll;
+	height: 100%;
+	margin:0;
+	padding:0;
 }
+body {
+	height: 100%;
+	margin:0;
+	padding:0;
+}
+
 #footer {
-	clear: both;
-	position: fixed;
+	position: absolute;
 	bottom: 0;
+	height: 20px;
 	text-align: center;
+	padding: 10px 0 10px 0;
 	color: #999;
 	width: 100%;
-	padding: 3px;
 	font-size: smaller;
 	background-color: #F5F5F5;
-	border: 1px solid rgba(0, 0, 0, 0.06);
+	border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+#wrapper {
+	min-height:100%;
+	position:relative;
 }
 
 .uk-navbar-brand {
@@ -33,11 +47,11 @@ body {
 }
 
 .phony {
-    cursor: pointer;
+	cursor: pointer;
 }
 
 #frame {
-	padding-top: 20px;
+	padding-bottom:30px;
 }
 
 small {
@@ -86,7 +100,7 @@ dl {
 
 /* Skill queue block */
 #skillqueue {
-    padding-bottom: 10px;
+	padding-bottom: 10px;
 }
 #current-train td {
 	padding-right: 10px;

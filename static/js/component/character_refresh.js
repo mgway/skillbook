@@ -18,7 +18,7 @@ define(
 
             this.cancelRefresh = function(e, data) {
                 this.trigger('schedule-cancel', {
-                    eventName: 'uiQueueRefresh'
+                    eventName: 'uiCharacterRefresh'
                 });
             };
            

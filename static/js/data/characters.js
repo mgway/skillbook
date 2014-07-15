@@ -126,6 +126,7 @@ define(
             this.saveQueue = function(e, data) {
                 var MS_PER_DAY = 86400000; // 24*60*60*1000
                 var queueList = [];
+                var finishedList = [];
                 var now = moment.utc();
                 var toSave = {};
                 toSave.refreshTime = moment();
@@ -142,7 +143,10 @@ define(
                         // Skill fits in 24 hour window, but isn't being trained now
                         skill.percent = Math.min(end - start, MS_PER_DAY) / 864000;
                     } else {
-                        return; // Skill training completed
+                        // Skill training completed; put in the completed queue 
+                        // for estimated SP calculation
+                        finishedList.push(skill);
+                        return; 
                     }
                     
                     queueList.push(skill);
@@ -165,6 +169,7 @@ define(
                 }
                 
                 toSave.queue = queueList;
+                toSave.finishedQueue = finishedList;
                 toSave.current = queueList[0];
                 
                 localStorage.setItem('queue_'+data.meta.characterId, JSON.stringify(toSave));

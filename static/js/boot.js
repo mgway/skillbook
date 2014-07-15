@@ -26,7 +26,7 @@ require(
   function(debug) {
     debug.enable(true);
     debug.events.logAll();
-    require(['page/default'], function(initialize) {
+    require(['page/skills'], function(initialize) {
         initialize();
     });
   }
