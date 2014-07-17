@@ -12,13 +12,17 @@ define(
                 clickSelector: 'a',
             });
             
-            this.updateTitleForList = function(character) {
+            this.updateTitleForList = function(e, data) {
                 this.$node.text('Characters');
+                
+                $('title').text("skillbook | characters");
             };
             
             this.updateTitleForCharacter = function(e, data) {
                 var template = handlebars.compile('<a class="phony uk-link-muted">Characters</a> &raquo {{name}}');
                 this.$node.html(template(data.character));
+                
+                $('title').text("skillbook | " + data.character.name);
             };
             
             this.updateTitleForCharacters = function(e) {

@@ -12,7 +12,7 @@ define(
             
             this.render = function(e, data) {
                 // Don't constantly re-render
-                if(lastRefreshTime != data.refreshTime) {
+                if(lastRefreshTime != data.refreshTime || this.$node.html() === "") {
                     lastRefreshTime = data.refreshTime;
                     this.$node.html(template(data.character));
                 }

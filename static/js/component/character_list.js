@@ -31,7 +31,7 @@ define(
 
                 this.on('click', { 'clickSelector': this.requestDisplayCharacter });
                 
-                this.trigger(document, 'uiCharactersRequest');
+                //this.trigger(document, 'uiCharactersRequest');
             });
        }
    }

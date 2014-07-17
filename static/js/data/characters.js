@@ -125,11 +125,11 @@ define(
             
             this.saveQueue = function(e, data) {
                 var MS_PER_DAY = 86400000; // 24*60*60*1000
-                var queueList = [];
                 var finishedList = [];
                 var now = moment.utc();
                 var toSave = {};
                 toSave.refreshTime = moment();
+                toSave.queue = []
                 
                 data.queue.forEach(function(skill) {
                     var start = moment.utc(skill.starttime);
@@ -149,28 +149,27 @@ define(
                         return; 
                     }
                     
-                    queueList.push(skill);
+                    toSave.queue.push(skill);
                 });
                 
                 // Shortcut for empty queue
-                if (queueList.length === 0) {
+                if (toSave.queue.length === 0) {
                     localStorage.setItem('queue_'+data.meta.characterId, JSON.stringify(toSave));
                     return;
                 }
                 
-                var last_skill = queueList.slice(-1)[0];
+                var last_skill = toSave.queue.slice(-1)[0];
                 var endTime = moment.utc(last_skill.endtime);
                 if (endTime - now < MS_PER_DAY) { // 
-                    queueList.push({name: "Free Room", starttime: endTime, 
+                    toSave.queue.push({name: "Free Room", starttime: endTime, 
                                     is_free_room: true, endtime: now.add('hours', 24) });
                 } else {
-                    toSave.has_multiple_skills = queueList.length > 1;
+                    toSave.has_multiple_skills = toSave.queue.length > 1;
                     toSave.end_time = last_skill.endtime;
                 }
                 
-                toSave.queue = queueList;
                 toSave.finishedQueue = finishedList;
-                toSave.current = queueList[0];
+                toSave.current = toSave.queue[0];
                 
                 localStorage.setItem('queue_'+data.meta.characterId, JSON.stringify(toSave));
                 

@@ -221,7 +221,7 @@ if __name__ == "__main__":
             (r'/login', LoginHandler),
             (r'/logout', LogoutHandler),
             (r'/register', RegistrationHandler),
-            (r'/skills', SkillsHandler),
+            (r'/skills.*', SkillsHandler),
             (r'/api/static/(.+)', StaticAjaxHandler),
             (r'/api/(?P<command>[^\/]+)/?(?P<arg>[^\/]+)?', DynamicAjaxHandler),
             (r'/settings', SettingsHandler),
