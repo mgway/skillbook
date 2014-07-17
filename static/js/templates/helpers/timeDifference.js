@@ -1,15 +1,19 @@
 define('templates/helpers/timeDifference', ['hbs/handlebars', 'common/preciseMoment'], 
     function(Handlebars, moment) {
         function timeDifference(first, second, options) {
-            var firstMoment;
+            var firstMoment, secondMoment;
             
-            if (first == "now") {
+            // Account for only one argument when fromNow=true
+            options = options === undefined? second : options;
+            
+            if (options.hash.fromNow) {
                 firstMoment = moment.utc();
+                secondMoment = moment.utc(first);
             } else {
                 firstMoment = moment.utc(first);
+                secondMoment = moment.utc(second);
             }
             
-            var secondMoment = moment.utc(second);
             var now = moment.utc();
             
             if (firstMoment < now)

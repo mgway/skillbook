@@ -25,7 +25,7 @@
                 <td>{{spPerHour current}} SP/Hour</td><td>{{formatTime current.endtime}}</td>
             </tr>
             <tr>
-                <td></td><td>{{timeDifference 'now' current.endtime}}</td>
+                <td></td><td>{{timeDifference current.endtime fromNow=true}}</td>
             </tr>
         </table>
         {{/if}}

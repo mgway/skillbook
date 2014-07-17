@@ -7,12 +7,12 @@
             <div class="uk-comment-meta">
                 {{corporationname}}<br />
                 {{commas balance}} ISK<br />
-                {{#if training_end}}
-                    Queue finishes in: {{timeDifference 'now' training_end}}<br />
+                {{#ifInFuture training_end}}
+                    Queue finishes in: {{timeDifference training_end fromNow=true}}<br />
                     {{formatTime training_end}}
                 {{else}}
                     No skill in training
-                {{/if}}
+                {{/ifInFuture}}
             </div>
         </header>
     </article>
