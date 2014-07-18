@@ -316,7 +316,6 @@ def get_update_list():
 # Now that we've performed all the API calls specified by get_update_list, 
 # save the metadata about the calls
 def save_update_list(updates):
-    print(updates)
     with _cursor(conn) as c:
         c.executemany('UPDATE character_api_status SET (cached_until, last_call, response_code, response_error, ignored) = \
                 (%(cached_until)s, CURRENT_TIMESTAMP, %(response_code)s, %(response_error)s, %(ignored)s) WHERE \
