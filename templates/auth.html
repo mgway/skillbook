@@ -8,7 +8,7 @@
 		<p><a href="#" id="loginLink">login</a> | <a href="#" id="registerLink">register</a> </p>
 
 		<div id="login" style="display: none">
-			<small class="error">{{ error }}</small>
+			<small class="error">{{ login_error }}</small>
 			<form action="/login" method="POST" class="uk-form">
 				<input type="text" name="username" id="login_username" placeholder="username"></input> 
 				<input type="password" name= "password" placeholder="password"></input> 
@@ -19,7 +19,7 @@
 		</div>
 
 		<div id="register" style="display: none">
-			<small class="error">{{ error }}</small>
+			<small class="error">{{ register_error }}</small>
 			<form action="/register" method="POST" class="uk-form">
 				<fieldset data-uk-margin>
 				<input type="text" name="username" id="reg_username" placeholder="username"></input> 
@@ -51,8 +51,8 @@ $(document).ready(function () {
 	};
 	$('#loginLink').click(function() { showLogin() });
 	$('#registerLink').click(function() { showRegistration() });
-	if(document.location.search.indexOf('activity=login') != -1) { showLogin() }
-	if(document.location.search.indexOf('activity=register') != -1) { showRegistration()}
+	if(document.location.pathname.indexOf('login') != -1) { showLogin() }
+	if(document.location.pathname.indexOf('register') != -1) { showRegistration()}
 });
 </script>
 {% end %}

@@ -19,7 +19,7 @@ def perform_updates(key_id=None):
                 data = eveapi.character_sheet(row.keyid, row.vcode, row.keymask, row.characterid)
                 # Fudge the cached_until timer because it always returns ~30 seconds, and we
                 # don't care to update that often
-                data.cached_until = data.cached_until + datetime.timedelta(minutes=15)
+                data.cached_until = data.cached_until + datetime.timedelta(minutes=30)
                 db.save_character_sheet(data)
                 cache.remove("*:sheet:%s" % row.characterid)
                 cache.remove("*:skills:%s" % row.characterid)
@@ -69,32 +69,32 @@ def add_key(user_id, key_id, vcode):
     cache.remove('*:characters:%s' % user_id)
 
 
-@cached('characters', arg_pos=0, expires=240)
+@cached('characters', arg_pos=0, expires=30)
 def get_characters(userid):
     return [char.raw for char in db.get_character_briefs(userid)]
 
 
 @cached('sheet', arg_pos=1)
-def get_character_sheet(userid, characterid):
-    if db.get_character(userid, characterid):
-        return db.get_character_sheet(characterid).raw
+def get_character_sheet(user_id, character_id):
+    if db.get_character(user_id, character_id):
+        return db.get_character_sheet(character_id).raw
     else:
         raise SkillbookException('You do not have permission to view this character')
 
 
 @cached('skills', arg_pos=1)
-def get_character_skills(userid, characterid):
-    if db.get_character(userid, characterid):
-        skills = db.get_character_skills(characterid)
+def get_character_skills(user_id, character_id):
+    if db.get_character(user_id, character_id):
+        skills = db.get_character_skills(character_id)
         return [skill.raw for skill in skills]
     else:
         raise SkillbookException('You do not have permission to view this character')
 
 
 @cached('queue', arg_pos=1)
-def get_character_queue(userid, characterid):
-    if db.get_character(userid, characterid):
-        skills = db.get_skill_queue(characterid)
+def get_character_queue(user_id, character_id):
+    if db.get_character(user_id, character_id):
+        skills = db.get_skill_queue(character_id)
         return [skill.raw for skill in skills]
     else:
         raise SkillbookException('You do not have permission to view this character')

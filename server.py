@@ -18,6 +18,9 @@ class BaseHandler(tornado.web.RequestHandler):
         user_json = self.get_secure_cookie("skillbook_user")
         if not user_json: return None
         return tornado.escape.json_decode(user_json)
+    def set_current_user(self, user_id):
+        json = tornado.escape.json_encode({'userid': user_id})
+        self.set_secure_cookie('skillbook_user', str(user_id), expires_days=90)
 
 
 class MainHandler(BaseHandler):
@@ -37,19 +40,19 @@ class HelpHandler(BaseHandler):
 
 
 class LoginHandler(BaseHandler):
+    attrs = {'login_error': '', 'register_error': ''}
     def get(self):
-        self.render('login.html')
+        self.render('auth.html', **self.attrs)
     def post(self):
         username = self.get_argument('username')
         password = self.get_argument('password')
         user_id = db.check_login(username, password)
         if user_id is not None:
-            json = tornado.escape.json_encode({'userid': user_id})
-            self.set_secure_cookie('skillbook_user', str(user_id), expires_days=90)
+            self.set_current_user(user_id)
             self.redirect('/skills')
         else:
-            error = u'?activity=login&error=' + tornado.escape.url_escape('Incorrect username or password')
-            self.redirect('/' + error)
+            self.attrs['login_error'] = 'Incorrect username or password'
+            self.render('auth.html', **self.attrs)
 
 
 class LogoutHandler(BaseHandler):
@@ -59,23 +62,24 @@ class LogoutHandler(BaseHandler):
 
 
 class RegistrationHandler(BaseHandler):
+    attrs = {'login_error': '', 'register_error': ''}
     def get(self):
-        self.redirect('/')
+        self.render('auth.html', **self.attrs)
     def post(self):
         username = self.get_argument('username').lower()
         password = self.get_argument('password')
         password_again = self.get_argument('password_rep')
+        
         if password != password_again:
-            error = u'?activity=register&error=' + tornado.escape.url_escape("Passwords don't match")
-            self.redirect('/' + error)
-        if not db.username_available(username):
-            error = u'?activity=register&error=' + tornado.escape.url_escape("This username has been taken")
-            self.redirect('/' + error)
+            self.attrs['register_error'] = 'Passwords don\'t match'
+            self.render('auth.html', **self.attrs)
+        elif not db.username_available(username):
+            self.attrs['register_error'] = 'This username has been taken'
+            self.render('auth.html', **self.attrs)
         else:
             user_id = db.create_account(username, password)
             if user_id is not None:
-                json = tornado.escape.json_encode({'userid': user_id})
-                self.set_secure_cookie('skillbook_user', str(user_id), expires_days=90)
+                self.set_current_user(user_id)
                 self.redirect('/settings')
             else:
                 self.redirect('/')
@@ -195,7 +199,8 @@ class DynamicAjaxHandler(AjaxHandler):
                 skills = api.get_character_queue(userid, arg)
                 self.write_message(skills)
             else:
-                print('unhandled command: ' + str(command))
+                self.set_status(404)
+                self.write_message({'error': 'Unknown resource: ' + str(command)}, pre=False)
 
         except api.SkillbookException as e:
             self.set_status(403, e.message)
@@ -223,7 +228,7 @@ if __name__ == "__main__":
             (r'/register', RegistrationHandler),
             (r'/skills.*', SkillsHandler),
             (r'/api/static/(.+)', StaticAjaxHandler),
-            (r'/api/(?P<command>[^\/]+)/?(?P<arg>[^\/]+)?', DynamicAjaxHandler),
+            (r'/api/(?P<command>[^\/]+)/?(?P<arg>[\d]+)?', DynamicAjaxHandler),
             (r'/settings', SettingsHandler),
             (r'/settings/keys', SettingsKeyHandler),
             (r'/settings/prefs', SettingsPrefsHandler),
