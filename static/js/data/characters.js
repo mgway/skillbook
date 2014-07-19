@@ -17,8 +17,8 @@ define(
             });
 
             this.fetchCharacters = function() {
-                var refreshTime = localStorage.getItem('characters_refresh_time');
-                if (refreshTime === null || moment() - moment(refreshTime) > this.attr.interval) {
+                var characters = JSON.parse(localStorage.getItem('characters'));
+                if (characters === null || moment() - moment(characters.refreshTime) > this.attr.interval) {
                     this.get({
                         xhr: {
                             url: '/api/characters/'
@@ -31,14 +31,15 @@ define(
                         }
                     });
                 } else {
-                    var characters = JSON.parse(localStorage.getItem('characters'));
-                    this.trigger('dataCharactersResponse', {characters: characters});
+                    this.trigger('dataCharactersResponse', characters);
                 }
             };
             
             this.saveCharacters = function(e, data) {
-                localStorage.setItem('characters', JSON.stringify(data.characters));
-                localStorage.setItem('characters_refresh_time', moment());
+                data.refreshTime = moment();
+                // Don't save an empty character list
+                if (data.characters !== [])
+                    localStorage.setItem('characters', JSON.stringify(data));
             };
 		
             this.fetchCharacter = function(e, data) {

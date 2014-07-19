@@ -8,7 +8,10 @@
                 {{corporationname}}<br />
                 {{commas balance}} ISK<br />
                 {{#ifInFuture training_end}}
-                    Queue finishes in: {{timeDifference training_end fromNow=true}}<br />
+                    Queue finishes in: 
+                    <span data-expiration="{{training_end}}"> 
+                        {{timeDifference training_end fromNow=true}}
+                    </span><br />
                     {{formatTime training_end}}
                 {{else}}
                     No skill in training

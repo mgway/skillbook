@@ -8,11 +8,13 @@ define(
         'component/character_refresh',
         'data/characters',
         'schedule', 
-        'common/flight-history'
+        'history', 
+        'common/liveCountdown'
     ],
     
     function(CharacterTitle, CharacterList, CharacterDetail, CharacterQueue, 
-                CharacterSkills, CharacterRefresh, CharacterStore, Schedule, History) {
+                CharacterSkills, CharacterRefresh, CharacterStore, Schedule, 
+                History, countdown) {
 
         function initialize() {
             CharacterStore.attachTo(document);
@@ -31,6 +33,8 @@ define(
                         '/character/{id}': 'uiCharacterRequest'
                 }
             });
+            
+            setInterval(countdown, 5000)
         }
         
         return initialize;

@@ -8,6 +8,7 @@ requirejs.config({
     hbs: 'bower_components/require-handlebars-plugin/hbs',
     underscore: 'bower_components/underscore/underscore',
     schedule: 'bower_components/flight-schedule/lib/schedule',
+    history: 'bower_components/flight-history/lib/flight-history',
   },
   hbs: {
         helpers: true,
