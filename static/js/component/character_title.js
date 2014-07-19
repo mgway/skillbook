@@ -1,6 +1,6 @@
 define(
     [
-        'flight/component',
+        'flight/lib/component',
         'hbs/handlebars'
     ],
     function(defineComponent, handlebars) {

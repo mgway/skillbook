@@ -1,3 +1,4 @@
 __pycache__
 config.yaml
 *.pyc
+static/js/bower_components/*

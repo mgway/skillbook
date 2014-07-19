@@ -40,19 +40,19 @@
 <script type="text/javascript">
 $(document).ready(function () {
 	var showLogin = function() {
-		$('register').hide(); 
-		$('login').toggle();
-		$('login_username').focus();
+		$('#register').hide(); 
+		$('#login').toggle();
+		$('#login_username').focus();
 	};
 	var showRegistration = function() {
-		$('login').hide(); 
-		$('register').toggle();
-		$('reg_username').focus();
+		$('#login').hide(); 
+		$('#register').toggle();
+		$('#reg_username').focus();
 	};
-	$('loginLink').click(function() { showLogin() });
-	$('registerLink').click(function() { showRegistration() });
-	if(document.URL.contains('activity=login')) { showLogin() }
-	if(document.URL.contains('activity=register')) { showRegistration()}
+	$('#loginLink').click(function() { showLogin() });
+	$('#registerLink').click(function() { showRegistration() });
+	if(document.location.search.indexOf('activity=login') != -1) { showLogin() }
+	if(document.location.search.indexOf('activity=register') != -1) { showRegistration()}
 });
 </script>
 {% end %}

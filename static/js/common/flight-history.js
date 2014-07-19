@@ -1,6 +1,6 @@
 define(
     [
-        'flight/component'
+        'flight/lib/component'
     ],
     function (defineComponent) {
         return defineComponent(flightHistory);

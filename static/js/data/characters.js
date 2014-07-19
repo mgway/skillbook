@@ -2,7 +2,7 @@
 
 define(
     [
-        'flight/component',
+        'flight/lib/component',
         'common/ajax',
         'moment',
         'underscore'

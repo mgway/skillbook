@@ -1,6 +1,6 @@
 define(
     [
-        'flight/component',
+        'flight/lib/component',
         'hbs!templates/character_queue',
         'moment'
     ],
