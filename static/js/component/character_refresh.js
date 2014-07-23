@@ -11,7 +11,7 @@ define(
                 this.trigger('schedule-task', {
                     eventName: 'uiCharacterRefresh',
                     data: data,
-                    period: 20,
+                    period: 9,
                     immediate: false
                 });
             };

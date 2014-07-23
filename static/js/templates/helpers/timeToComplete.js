@@ -9,9 +9,8 @@ define('templates/helpers/timeToComplete', ['hbs/handlebars'],
 				168: skill.willpower
 			};
 			
-			var sp_hour = spPerHour(attr[skill.primaryattr], attr[skill.secondaryattr]);
-			var sp_required = spNextLevel(skill.level, skill.timeconstant) - skill.skillpoints;
-			//var response = {'seconds': (sp_required/sp_hour) * 3600, 'sp_hour': sp_hour, 'sp_required': sp_required};
+			var sp_hour = spPerHour(attr[skill.primary_attribute], attr[skill.secondary_attribute]);
+			var sp_required = spNextLevel(skill.level, skill.rank) - skill.skillpoints;
 			return formatSeconds((sp_required/sp_hour) * 3600);
         }
         

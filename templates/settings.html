@@ -5,7 +5,7 @@
 		<h2>Account Settings</h2>
 		<div class="uk-grid">
 			<div class="uk-width-medium-1-2">
-        		<div class="uk-panel uk-panel-box">
+				<div class="uk-panel uk-panel-box">
 					<h3>Preferences &amp; Stuff</h3>
 					<form class="uk-form" method="POST" action="/settings/prefs">
 					<fieldset>
@@ -27,9 +27,9 @@
 					</fieldset>
 					</form>
 				</div>
-    		</div>
-    		<div class="uk-width-medium-1-2">
-        		<div class="uk-panel uk-panel-box">
+			</div>
+			<div class="uk-width-medium-1-2">
+				<div class="uk-panel uk-panel-box">
 					<h3>Password Management</h3>
 					<small class="error">{% if context == "password" %}{{ error }}{% end %}</small>
 					<form class="uk-form" method="POST" action="/settings/password">
@@ -50,22 +50,22 @@
 					</fieldset>
 					</form>
 				</div>
-    		</div>
+			</div>
 
 			<div class="uk-width-1-1">
 			<h2>API Keys</h2>
 		{% for key in keys %}
-			<div class="uk-panel uk-panel-box uk-panel-box-secondary" style="margin-top: 10px;" id="keys_{{key.keyid}}">
+			<div class="uk-panel uk-panel-box uk-panel-box-secondary" style="margin-top: 10px;" id="keys_{{key.key_id}}">
 				{% for char in key.ids %}
 					<img src="http://image.eveonline.com/Character/{{ char }}_64.jpg" style="float:left; padding: 2px;"/>
 				{% end %}
 				<div style="float: left; padding: 5px;"> 
 					Characters: {{ ', '.join(key.names) }} <br />
-					Key ID: {{ key.keyid }}<br />
-					Key Mask: {{ key.keymask }}
+					Key ID: {{ key.key_id }}<br />
+					Key Mask: {{ key.mask }}
 				</div>
 				<div class='uk-float-right'>
-					<a onClick='doDelete({{key.keyid}})'><i class='uk-icon-trash-o phony'></i></a>
+					<a onClick='doDelete({{key.key_id}})'><i class='uk-icon-trash-o phony'></i></a>
 				</div>
 			</div>
 		{% end %}
@@ -90,6 +90,7 @@
 	</div>
 {% end %}
 {% block js %}
+<script type='text/javascript' src='/static/js/bower_components/jquery/dist/jquery.min.js'></script>
 <script type='text/javascript'>
 	function getCookie(name) {
 		var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
@@ -98,14 +99,15 @@
 	function doDelete(keyid) {
 		if(!confirm('Are you sure you want to delete this key?'))
 			return;
-		new Request({
-			'url': '/settings/keys',
-			'data': {'keyid': keyid, '_xsrf': getCookie('_xsrf'), 'remove':'yes'},
-			'onSuccess': function() {$('keys_'+keyid).dispose()},
-			'onFailure': function(xhr) {
+		$.ajax({
+			type: 'POST',
+			url: '/settings/keys',
+			data: {'keyid': keyid, '_xsrf': getCookie('_xsrf'), 'remove': 'yes'},
+			success: function() {$('keys_'+keyid).empty()},
+			error: function(xhr) {
 				alert("There was an error when removing this key, please try again");
 			},
-        }).post();
+		});
 	}
 </script>
 {% end %}

@@ -5,7 +5,6 @@ import datetime
 from cache import cached
 from psycopg2.tz import FixedOffsetTimezone
 
-
 def perform_updates(key_id=None):
     if key_id:
         updates = db.get_update_for_key(key_id)
@@ -15,20 +14,20 @@ def perform_updates(key_id=None):
     for row in updates:
         try:
             result = row.raw
-            if row.method == 'CharacterSheet':
-                data = eveapi.character_sheet(row.keyid, row.vcode, row.keymask, row.characterid)
+            if row.api_method == 'CharacterSheet':
+                data = eveapi.character_sheet(row.key_id, row.vcode, row.mask, row.character_id)
                 # Fudge the cached_until timer because it always returns ~30 seconds, and we
                 # don't care to update that often
                 data.cached_until = data.cached_until + datetime.timedelta(minutes=30)
                 db.save_character_sheet(data)
-                cache.remove("*:sheet:%s" % row.characterid)
-                cache.remove("*:skills:%s" % row.characterid)
-            elif row.method == 'SkillQueue':
-                data = eveapi.skill_queue(row.keyid, row.vcode, row.keymask, row.characterid)
-                db.save_skill_queue(row.characterid, data.skillqueue)
-                cache.remove("*:queue:%s" % row.characterid)
+                cache.remove("*:sheet:%s" % row.character_id)
+                cache.remove("*:skills:%s" % row.character_id)
+            elif row.api_method == 'SkillQueue':
+                data = eveapi.skill_queue(row.key_id, row.vcode, row.mask, row.character_id)
+                db.save_skill_queue(row.character_id, data.skillqueue)
+                cache.remove("*:queue:%s" % row.character_id)
             else:
-                raise SkillbookException('Unknown API method %s' % row.method)
+                raise SkillbookException('Unknown API method %s' % row.api_method)
 
             # Fix the timezone, they give us UTC which might not be the TZ of the server
             result.update({'cached_until': data.cached_until.replace(tzinfo=FixedOffsetTimezone(0)), 
@@ -58,10 +57,10 @@ def add_key(user_id, key_id, vcode):
     grants = []
     for req in requirements:
         if int(mask) & req.mask == 0:
-            if req.required:
+            if req.is_required:
                 raise SkillbookException('The supplied key is missing the %s permission' % req.name)
         else:
-            grants.append({'name': req.name, 'ignored': not req.required})
+            grants.append({'name': req.name, 'ignored': not req.is_required})
 
     db.add_key(user_id, key_id, vcode, mask, characters.key.characters.rows)
     db.add_grants(key_id, grants, characters.key.characters.rows)
@@ -70,8 +69,8 @@ def add_key(user_id, key_id, vcode):
 
 
 @cached('characters', arg_pos=0, expires=30)
-def get_characters(userid):
-    return [char.raw for char in db.get_character_briefs(userid)]
+def get_characters(user_id):
+    return [char.raw for char in db.get_character_briefs(user_id)]
 
 
 @cached('sheet', arg_pos=1)
@@ -105,7 +104,7 @@ def get_skills():
     db_skills = db.get_skills()
     skills_dict = dict()
     for skill in db_skills:
-        skills_dict[skill.typeid] = skill.raw
+        skills_dict[skill.type_id] = skill.raw
     return skills_dict
 
 

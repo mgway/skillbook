@@ -1,7 +1,7 @@
 <div class="uk-width-1-1 uk-panel" id="skillqueue">
     {{#if has_multiple_skills}}
         <span class="uk-float-left">{{formatTime end_time}}</span>
-        <span class="uk-float-right">Remaining: {{timeDifference 'now' end_time}}</span>
+        <span class="uk-float-right">Remaining: {{timeDifference end_time fromNow=true}}</span>
     {{/if}}
     <table style="width: 100%" id="queue">
         <tr></tr>
@@ -9,9 +9,9 @@
             <td style="width: {{percent}}%; {{#if is_free_room}}background-color: #979797{{/if}}">&nbsp;
                 <span class="tooltip">
                     <strong>{{name}} {{romanize level}}</strong><br />
-                    {{^current}}Starts: {{formatTime starttime}}<br />{{/current}}
-                    {{^is_free_room}}Finishes: {{formatTime endtime}}<br />{{/is_free_room}}
-                    Duration: {{timeDifference starttime endtime}}
+                    {{^current}}Starts: {{formatTime start_time}}<br />{{/current}}
+                    {{^is_free_room}}Finishes: {{formatTime end_time}}<br />{{/is_free_room}}
+                    Duration: {{timeDifference start_time end_time}}
                 </span>
             </td>
             {{/queue}}
@@ -22,10 +22,10 @@
                 <td>Currently Training:</td><td><strong>{{current.name}}</strong> {{romanize current.level}}</td>
             </tr>
             <tr>
-                <td>{{spPerHour current}} SP/Hour</td><td>{{formatTime current.endtime}}</td>
+                <td>{{spPerHour current}} SP/Hour</td><td>{{formatTime current.end_time}}</td>
             </tr>
             <tr>
-                <td></td><td>{{timeDifference current.endtime fromNow=true}}</td>
+                <td></td><td>{{timeDifference current.end_time fromNow=true}}</td>
             </tr>
         </table>
         {{/if}}

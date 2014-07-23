@@ -1,10 +1,10 @@
-<tr id="skill_{{typeid}}">
+<tr id="skill_{{type_id}}">
     <td colspan='2'>
-        <b>{{name}}</b><br />SP: {{commas skillpoints}} / {{spNextLevel level timeconstant}} ({{timeconstant}}x)
+        <b>{{name}}</b><br />SP: {{commas skillpoints}} / {{spNextLevel level rank}} ({{rank}}x)
         <div class='tooltip-wrap'>
             <b>Completed Level:</b> {{romanize level}}<br />
             <b>Training time:</b> {{timeToComplete this}}<br/>
-            <b>Attributes: </b> {{decodeAttribute primaryattr}} / {{decodeAttribute secondaryattr}} ({{spPerHour this}} SP/Hour)<br /><br />
+            <b>Attributes: </b> {{decodeAttribute primary_attribute}} / {{decodeAttribute secondary_attribute}} ({{spPerHour this}} SP/Hour)<br /><br />
             <b>Description:</b><br />{{description}}
         </div>
     </td>

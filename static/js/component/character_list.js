@@ -11,7 +11,7 @@ define(
             this.defaultAttrs({
                 clickSelector: '.uk-comment',
             });
-		
+            
             this.render = function(e, data) {
                 this.$node.html(template(data));
             };
@@ -28,10 +28,8 @@ define(
             this.after('initialize', function() {
                 this.on(document, 'dataCharactersResponse', this.render);
                 this.on(document, 'uiCharacterRequest', this.hide);
-
-                this.on('click', { 'clickSelector': this.requestDisplayCharacter });
                 
-                //this.trigger(document, 'uiCharactersRequest');
+                this.on('click', { 'clickSelector': this.requestDisplayCharacter });
             });
        }
    }

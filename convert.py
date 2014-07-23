@@ -12,7 +12,7 @@ def main():
     # Get item groups
     mysql_cursor.execute('SELECT groupID, groupName, categoryID from `invGroups`')
     groups = mysql_cursor.fetchall()
-    pg_cursor.executemany("INSERT INTO groups (groupid, name, categoryid) VALUES (%(groupID)s, %(groupName)s, %(categoryID)s)", groups)
+    pg_cursor.executemany("INSERT INTO item_group (group_id, name, category_id) VALUES (%(groupID)s, %(groupName)s, %(categoryID)s)", groups)
     postgres.commit()
 
     mysql_cursor.execute('SELECT * FROM `invTypes` WHERE `groupID` IN (SELECT groupID FROM `invGroups` WHERE `categoryID` = 16 AND `published` = 1) and `published` = 1')
@@ -21,7 +21,7 @@ def main():
     # Replace decimals prices with integer ones
     skills_fixed = [dict(item, **{'price': int(item['basePrice']), 'categoryID':16}) for item in skills]
 
-    pg_cursor.executemany("""INSERT INTO skills (typeid,groupid,categoryid,description,baseprice,name) VALUES (%(typeID)s, %(groupID)s, %(categoryID)s, %(description)s, %(price)s, %(typeName)s)""", skills_fixed)
+    pg_cursor.executemany("""INSERT INTO skill (type_id,group_id,category_id,description,base_price,name) VALUES (%(typeID)s, %(groupID)s, %(categoryID)s, %(description)s, %(price)s, %(typeName)s)""", skills_fixed)
     postgres.commit()
 
     # Now add the skill dependencies
@@ -30,10 +30,10 @@ def main():
     
         (prereqs,attributes) = decode_rows(mysql_cursor.fetchall()) 
         attributes['typeID'] = skill['typeID']
-        pg_cursor.execute("""UPDATE skills SET timeconstant = %(multiplier)s, primaryattr = %(primary)s, secondaryattr = %(secondary)s WHERE typeID = %(typeID)s""", attributes)
+        pg_cursor.execute("""UPDATE skill SET rank = %(multiplier)s, primary_attribute = %(primary)s, secondary_attribute = %(secondary)s WHERE type_id = %(typeID)s""", attributes)
 
         prereqs_list = [dict(req, **{'typeID': skill['typeID']}) for req in prereqs.values()] 
-        pg_cursor.executemany("""INSERT INTO reqs_temp (typeid,reqtypeid,level) VALUES (%(typeID)s, %(skill)s, %(level)s)""", prereqs_list)
+        pg_cursor.executemany("""INSERT INTO req_temp (type_id,requirement_type_id,level) VALUES (%(typeID)s, %(skill)s, %(level)s)""", prereqs_list)
 
         postgres.commit()
 
@@ -45,7 +45,7 @@ def main():
         # Replace decimals prices with integer ones
         items_fixed = [dict(item, **{'price': int(item['basePrice']), 'categoryID': category}) for item in items]
 
-        pg_cursor.executemany("""INSERT INTO items (typeid,groupid,categoryid,description,baseprice,name) VALUES (%(typeID)s, %(groupID)s, %(categoryID)s, %(description)s, %(price)s, %(typeName)s)""", items_fixed)
+        pg_cursor.executemany("""INSERT INTO item (type_id,group_id,category_id,description,base_price,name) VALUES (%(typeID)s, %(groupID)s, %(categoryID)s, %(description)s, %(price)s, %(typeName)s)""", items_fixed)
         postgres.commit()
 
         for item in items_fixed:
@@ -54,7 +54,7 @@ def main():
             (prereqs,x) = decode_rows(mysql_cursor.fetchall()) 
 
             prereqs_list = [dict(req, **{'typeID': item['typeID']}) for req in prereqs.values()] 
-            pg_cursor.executemany("""INSERT INTO reqs_temp (typeid,reqtypeid,level) VALUES (%(typeID)s, %(skill)s, %(level)s)""", prereqs_list)
+            pg_cursor.executemany("""INSERT INTO req_temp (type_id,requirement_type_id,level) VALUES (%(typeID)s, %(skill)s, %(level)s)""", prereqs_list)
 
             postgres.commit()
 

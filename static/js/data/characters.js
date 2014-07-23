@@ -107,10 +107,10 @@ define(
             
             this.saveSkills = function(e, data) {
                 var groupsList = [];
-                var groups = _.groupBy(data.skills, function(skill) { return skill.groupname });
+                var groups = _.groupBy(data.skills, function(skill) { return skill.group_name });
                 _.forEach(groups, function (group) { 
                     groupsList.push({
-                        name: group[0].groupname,
+                        name: group[0].group_name,
                         skillpoints: _.reduce(group, function(memo, skill) { return skill.skillpoints + memo }, 0),
                         count: group.length,
                         skills: _.sortBy(group, function(skill) { return skill.name }) 
@@ -130,11 +130,11 @@ define(
                 var now = moment.utc();
                 var toSave = {};
                 toSave.refreshTime = moment();
-                toSave.queue = []
+                toSave.queue = [];
                 
                 data.queue.forEach(function(skill) {
-                    var start = moment.utc(skill.starttime);
-                    var end = moment.utc(skill.endtime);
+                    var start = moment.utc(skill.start_time);
+                    var end = moment.utc(skill.end_time);
                     
                     if(start < now && end > now) {
                         // Skill is being trained now
@@ -159,14 +159,14 @@ define(
                     return;
                 }
                 
-                var last_skill = toSave.queue.slice(-1)[0];
-                var endTime = moment.utc(last_skill.endtime);
-                if (endTime - now < MS_PER_DAY) { // 
-                    toSave.queue.push({name: "Free Room", starttime: endTime, 
-                                    is_free_room: true, endtime: now.add('hours', 24) });
+                var lastSkill = toSave.queue.slice(-1)[0];
+                var lastSkillEnd = moment.utc(lastSkill.end_time);
+                if (lastSkillEnd - now < MS_PER_DAY) { // 
+                    toSave.queue.push({name: "Free Room", start_time: lastSkillEnd, 
+                                    is_free_room: true, end_time: now.add('hours', 24) });
                 } else {
                     toSave.has_multiple_skills = toSave.queue.length > 1;
-                    toSave.end_time = last_skill.endtime;
+                    toSave.end_time = lastSkillEnd;
                 }
                 
                 toSave.finishedQueue = finishedList;

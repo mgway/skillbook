@@ -31,7 +31,7 @@ define(
             };
             
             this.setTraining = function(e, data) {
-                var id = '#skill_' + data.typeid;
+                var id = '#skill_' + data.type_id;
                 var row = this.$node.find(id);
                 row.css('background-color', 'rgba(94, 162, 230, 0.29)');
                 var img = row.find('img');
@@ -40,7 +40,7 @@ define(
             };
             
             this.setTrainingComplete = function(e, data) {
-                var id = '#skill_' + data.typeid;
+                var id = '#skill_' + data.type_id;
                 var row = this.$node.find(id);
                 var img = row.find('img');
                 var src = '/static/img/skill' + data.level + '.png';

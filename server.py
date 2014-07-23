@@ -6,7 +6,7 @@ import tornado.web
 import os
 import simplejson 
 import redis
-
+import traceback
 import db
 import api
 import config
@@ -127,8 +127,8 @@ class SettingsKeyHandler(BaseHandler):
                 error = u'?context=key&error=' + tornado.escape.url_escape(e.message)
                 self.redirect('/settings' + error)
             except Exception as e:
+                traceback.print_exc()
                 error = u'?context=key&error=' + tornado.escape.url_escape('An unknown error has occurred')
-                print(e)
                 self.redirect('/settings' + error)
 
 

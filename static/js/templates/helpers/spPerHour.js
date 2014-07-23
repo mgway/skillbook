@@ -8,7 +8,7 @@ define('templates/helpers/spPerHour', ['hbs/handlebars'],
 				167: skill.perception,
 				168: skill.willpower
 			};
-			return (attr[skill.primaryattr] + attr[skill.secondaryattr]/2) * 60;
+			return (attr[skill.primary_attribute] + attr[skill.secondary_attribute]/2) * 60;
         }
 
         Handlebars.registerHelper('spPerHour', spPerHour);
