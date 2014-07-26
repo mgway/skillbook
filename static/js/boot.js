@@ -17,16 +17,3 @@ requirejs.config({
         partialsUrl: 'templates/partials'
     }
 });
-
-require(
-  [
-    'flight/lib/debug'
-  ],
-
-  function(debug) {
-    debug.enable(true);
-    require(['page/skills'], function(initialize) {
-        initialize();
-    });
-  }
-);

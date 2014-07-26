@@ -68,11 +68,10 @@ def check_login(username, password):
 
 def change_password(userid, password, new_password):
     with _cursor(conn) as c:
-        #r = query_one(c, 'SELECT password, salt FROM users WHERE id = %s', (userid,))
-        #salt = binascii.unhexlify(bytes(r.salt))
-        #h = hmac.new(salt, password.encode('utf-8'), hashlib.sha256)
-        #if h.hexdigest() == r.password:
-        if True:
+        r = query_one(c, 'SELECT password, salt FROM skillbook_user WHERE user_id = %s', (userid,))
+        salt = binascii.unhexlify(bytes(r.salt))
+        h = hmac.new(salt, password.encode('utf-8'), hashlib.sha256)
+        if h.hexdigest() == r.password:
             hashed, newsalt = __hash(new_password)
             c.execute('UPDATE skillbook_user SET (password, salt) = \
                 (%s, %s) WHERE user_id = %s', (hashed, newsalt, userid))
@@ -190,6 +189,16 @@ def get_key(user_id, key_id):
             return key_id, r.vcode, r.key_mask
 
 
+def save_character_info(character):
+    with _cursor(conn) as c:
+        c.execute('UPDATE eve_character SET (corporation_id, corporation_name, \
+                    alliance_id, alliance_name, security) = \
+                    (%(corporationid)s, %(corporation)s, %(allianceid)s, \
+                    %(alliance)s, %(securitystatus)s)\
+                    where character_id = %(characterid)s', character.__dict__)
+        conn.commit()
+        
+
 def save_character_sheet(character):
     with _cursor(conn) as c:
         c.execute('UPDATE eve_character SET (corporation_id, corporation_name, bio, birthday, \
@@ -203,7 +212,7 @@ def save_character_sheet(character):
                     character_id = %(characterid)s', character.__dict__)
         conn.commit()
         
-        q = query(c, 'SELECT type_id, level, skillpoints FROM character_skill WHERE character_id = %s', 
+        current_skills = query(c, 'SELECT type_id, level, skillpoints FROM character_skill WHERE character_id = %s', 
                 (character.characterid,))
 
         # Transform skills into a dict instead of a list
@@ -216,7 +225,7 @@ def save_character_sheet(character):
         # breaks its internal state
         with _cursor(conn) as u:
             # Go through skills that are in the db
-            for skill in q:
+            for skill in current_skills:
                 # We want a string key, not int
                 typeid = str(skill.type_id)
                 if skill.skillpoints != int(skills[typeid]['skillpoints']):

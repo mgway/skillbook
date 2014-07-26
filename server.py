@@ -23,149 +23,6 @@ class BaseHandler(tornado.web.RequestHandler):
         self.set_secure_cookie('skillbook_user', str(user_id), expires_days=90)
 
 
-class MainHandler(BaseHandler):
-    def get(self):
-        error = self.get_argument("error", "")
-        self.render('index.html', error=error)
-
-
-class AboutHandler(BaseHandler):
-    def get(self):
-        self.render('info.html')
-
-
-class HelpHandler(BaseHandler):
-    def get(self):
-        self.render('help.html')
-
-
-class LoginHandler(BaseHandler):
-    attrs = {'login_error': '', 'register_error': ''}
-    def get(self):
-        self.render('auth.html', **self.attrs)
-    def post(self):
-        username = self.get_argument('username')
-        password = self.get_argument('password')
-        user_id = db.check_login(username, password)
-        if user_id is not None:
-            self.set_current_user(user_id)
-            self.redirect('/skills')
-        else:
-            self.attrs['login_error'] = 'Incorrect username or password'
-            self.render('auth.html', **self.attrs)
-
-
-class LogoutHandler(BaseHandler):
-    def get(self):
-        self.clear_cookie('skillbook_user')
-        self.redirect('/')
-
-
-class RegistrationHandler(BaseHandler):
-    attrs = {'login_error': '', 'register_error': ''}
-    def get(self):
-        self.render('auth.html', **self.attrs)
-    def post(self):
-        username = self.get_argument('username').lower()
-        password = self.get_argument('password')
-        password_again = self.get_argument('password_rep')
-        
-        if password != password_again:
-            self.attrs['register_error'] = 'Passwords don\'t match'
-            self.render('auth.html', **self.attrs)
-        elif not db.username_available(username):
-            self.attrs['register_error'] = 'This username has been taken'
-            self.render('auth.html', **self.attrs)
-        else:
-            user_id = db.create_account(username, password)
-            if user_id is not None:
-                self.set_current_user(user_id)
-                self.redirect('/settings')
-            else:
-                self.redirect('/')
-
-
-class SkillsHandler(BaseHandler):
-    @tornado.web.authenticated
-    def get(self):
-        self.render('skills.html')
-
-
-class SettingsHandler(BaseHandler):
-    @tornado.web.authenticated
-    def get(self):
-        userid = self.get_current_user()
-        keys = db.get_keys(userid)
-        prefs = db.get_preferences(userid)
-        error = self.get_argument("error", "")
-        context = self.get_argument("context", "")
-        self.render('settings.html', keys=keys, prefs=prefs,
-                error=error, context=context)
-
-
-class SettingsKeyHandler(BaseHandler):
-    @tornado.web.authenticated
-    def post(self):
-        userid = self.get_current_user()
-        keyid = self.get_argument('keyid')
-        vcode = self.get_argument('vcode', default='')
-        remove = self.get_argument('remove', False)
-        
-        if remove == 'yes':
-            api.remove_key(userid, keyid)
-            self.set_status(200)
-            return self.finish()
-
-        if keyid.strip() == "" or vcode.strip() == "":
-            error = u'?context=key&error=' + tornado.escape.url_escape('Please enter a valid Key ID and vCode')
-            self.redirect('/settings' + error)
-        else:
-            try:
-                api.add_key(userid, keyid, vcode)
-                self.redirect('/settings')
-            except (eveapi.APIException, eveapi.HttpException, api.SkillbookException, db.UserError) as e:
-                error = u'?context=key&error=' + tornado.escape.url_escape(e.message)
-                self.redirect('/settings' + error)
-            except Exception as e:
-                traceback.print_exc()
-                error = u'?context=key&error=' + tornado.escape.url_escape('An unknown error has occurred')
-                self.redirect('/settings' + error)
-
-
-
-class SettingsPrefsHandler(BaseHandler):
-    @tornado.web.authenticated
-    def post(self):
-        userid = self.get_current_user()
-        mail = self.get_argument('email', default="")
-        letter = self.get_argument('newsletter', default=False)
-        if mail.strip() == "":
-            self.redirect('/settings')
-        else:
-            db.change_preferences(userid, mail, letter)
-            self.redirect('/settings')
-
-
-class SettingsPasswordHandler(BaseHandler):
-    @tornado.web.authenticated
-    def post(self):
-        userid = self.get_current_user()
-        password = self.get_argument('current_password')
-        new_pw = self.get_argument('password')
-        new_pw_dup = self.get_argument('password_dup')
-
-        if new_pw != new_pw_dup:
-            error = u'?context=password&error=' + tornado.escape.url_escape('Passwords don\'t match')
-            self.redirect('/settings' + error)
-        else:
-            try:
-                db.change_password(userid, password, new_pw)
-                self.redirect('/settings')
-            except db.UserError as e:
-                error = u'?context=password&error=' + tornado.escape.url_escape(e.message)
-                self.redirect('/settings' + error)
-
-
 class AjaxHandler(BaseHandler):
     def write_message(self, message, pre=True):
         def json_handler(obj):
@@ -181,26 +38,184 @@ class AjaxHandler(BaseHandler):
             self.finish(simplejson.dumps(message, use_decimal=True, default=json_handler))
 
 
-class DynamicAjaxHandler(AjaxHandler):
-    def get(self, command, arg):
-        userid = self.get_current_user()
+class MainHandler(BaseHandler):
+    def get(self):
+        self.render('index.html')
+
+
+class AboutHandler(BaseHandler):
+    def get(self):
+        self.render('info.html')
+
+
+class HelpHandler(BaseHandler):
+    def get(self):
+        self.render('help.html')
+        
+
+class SkillsHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        self.render('skills.html')
+
+
+class PlansHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        self.render('plans.html')
+
+
+class LoginHandler(BaseHandler):
+    messages = {'login_error': '', 'register_error': ''}
+    def get(self):
+        self.render('auth.html', **self.messages)
+    def post(self):
+        messages = self.messages.copy()
+        username = self.get_argument('username')
+        password = self.get_argument('password')
+        
+        user_id = db.check_login(username, password)
+        if user_id is not None:
+            self.set_current_user(user_id)
+            self.redirect('/skills')
+        else:
+            messages['login_error'] = 'Incorrect username or password'
+            self.render('auth.html', **messages)
+
+
+class LogoutHandler(BaseHandler):
+    def get(self):
+        self.clear_cookie('skillbook_user')
+        self.redirect('/')
+
+
+class RegistrationHandler(BaseHandler):
+    messages = {'login_error': '', 'register_error': ''}
+    def get(self):
+        self.render('auth.html', **self.messages)
+    def post(self):
+        messages = self.messages.copy()
+        username = self.get_argument('username').lower()
+        password = self.get_argument('password')
+        password_again = self.get_argument('password_rep')
+        
+        if password != password_again:
+            messages['register_error'] = 'Passwords don\'t match'
+            self.render('auth.html', **messages)
+        elif not db.username_available(username):
+            messages['register_error'] = 'This username has been taken'
+            self.render('auth.html', **messages)
+        else:
+            user_id = db.create_account(username, password)
+            if user_id is not None:
+                self.set_current_user(user_id)
+                self.redirect('/settings')
+            else:
+                self.redirect('/')
+
+
+class SettingsHandler(BaseHandler):
+    messages = {'mail_error': '', 'mail': '', 'password_error': '', 'password': ''}
+    
+    @tornado.web.authenticated
+    def get(self):
+        user_id = self.get_current_user()
+        prefs = db.get_preferences(user_id)
+        self.render('settings.html', prefs=prefs, **self.messages)
+        
+    @tornado.web.authenticated
+    def post(self):
+        user_id = self.get_current_user()
+        messages = self.messages.copy()
+        
+        if self.get_argument('email-form', default=None):
+            mail = self.get_argument('email', default="")
+            letter = self.get_argument('newsletter', default=False)
+            db.change_preferences(user_id, mail, letter)
+            messages['mail'] = 'Mail preferences updated'
+
+        elif self.get_argument('password-form', default=None):
+            password = self.get_argument('current_password')
+            new_pw = self.get_argument('password')
+            new_pw_dup = self.get_argument('password_dup')
+            if new_pw != new_pw_dup:
+                messages['password_error'] = "Passwords don't match"
+            else:
+                try:
+                    db.change_password(user_id, password, new_pw)
+                    messages['password'] = 'Password successfully a'
+                except db.UserError as e:
+                    messages['password_error'] = e.message
+        
+        prefs = db.get_preferences(user_id)
+        self.render('settings.html', prefs=prefs, **messages)
+
+
+# API Methods
+class ApiKeyHandler(AjaxHandler):
+    @tornado.web.authenticated
+    def get(self, key_id = None):
+        user_id = self.get_current_user()
+        if key_id != None:
+            self.set_status(405)
+        else:
+            self.write_message(api.get_keys(user_id), pre=False)
+    
+    @tornado.web.authenticated
+    def post(self, key_id = None):
+        user_id = self.get_current_user()
+        
+        if key_id != None:
+            return self.set_status(405)
+            
+        try:
+            body = simplejson.loads(self.request.body)
+            key_id = body['keyid']
+            vcode = body['vcode']
+        except (simplejson.JSONDecodeError, KeyError):
+            self.set_status(400)
+            return self.write_message({'error': 'Enter a valid Key ID and vCode'}, pre=False)
 
         try:
-            if command == 'characters':
-                characters = api.get_characters(userid)
+            api.add_key(user_id, key_id, vcode)
+            self.set_status(201)
+            self.write_message(api.get_keys(user_id), pre=False)
+        except (eveapi.APIException, eveapi.HttpException, api.SkillbookException, db.UserError) as e:
+            self.set_status(400)
+            self.write_message({'error': e.message}, pre=False)
+        except Exception as e:
+            self.set_status(500)
+            self.write_message({'error': 'An unknown error has occurred'}, pre=False)
+          
+    @tornado.web.authenticated  
+    def delete(self, key_id = None):
+        user_id = self.get_current_user()
+        if key_id == None:
+            self.set_status(400)
+            self.write_message({'error': 'You must specify a Key ID to remove'}, pre=False)
+        else:
+            api.remove_key(user_id, key_id)
+            self.set_status(204)
+
+
+class CharacterHandler(AjaxHandler):
+    @tornado.web.authenticated
+    def get(self, character_id = None, subtype = None):
+        user_id = self.get_current_user()
+
+        try:
+            if not character_id:
+                characters = api.get_characters(user_id)
                 self.write_message(characters)
-            elif command == 'sheet':
-                sheet = api.get_character_sheet(userid, arg)
-                self.write_message(sheet)
-            elif command == 'skills':
-                skills = api.get_character_skills(userid, arg)
+            elif subtype == 'skills':
+                skills = api.get_character_skills(user_id, character_id)
                 self.write_message(skills)
-            elif command == 'queue':
-                skills = api.get_character_queue(userid, arg)
+            elif subtype == 'queue':
+                skills = api.get_character_queue(user_id, character_id)
                 self.write_message(skills)
             else:
-                self.set_status(404)
-                self.write_message({'error': 'Unknown resource: ' + str(command)}, pre=False)
+                sheet = api.get_character_sheet(user_id, character_id)
+                self.write_message(sheet)
 
         except api.SkillbookException as e:
             self.set_status(403, e.message)
@@ -227,18 +242,17 @@ if __name__ == "__main__":
             (r'/logout', LogoutHandler),
             (r'/register', RegistrationHandler),
             (r'/skills.*', SkillsHandler),
+            (r'/plans.*', PlansHandler),
             (r'/api/static/(.+)', StaticAjaxHandler),
-            (r'/api/(?P<command>[^\/]+)/?(?P<arg>[\d]+)?', DynamicAjaxHandler),
+            (r'/api/character/(?P<character_id>[\d]+)?/?(?P<subtype>[\w]+)?/?', CharacterHandler),
+            (r'/api/key/(?P<key_id>[\d]+)?/?', ApiKeyHandler),
             (r'/settings', SettingsHandler),
-            (r'/settings/keys', SettingsKeyHandler),
-            (r'/settings/prefs', SettingsPrefsHandler),
-            (r'/settings/password', SettingsPasswordHandler),
         ],
         template_path=os.path.join(os.path.dirname(__file__), 'templates'),
         static_path=os.path.join(os.path.dirname(__file__), 'static'),
         cookie_secret=config.web.cookie_secret,
         xsrf_cookies=True,
-        login_url='/',
+        login_url='login',
         debug=config.web.debug
     )
 

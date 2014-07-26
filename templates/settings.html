@@ -7,11 +7,13 @@
 			<div class="uk-width-medium-1-2">
 				<div class="uk-panel uk-panel-box">
 					<h3>Preferences &amp; Stuff</h3>
-					<form class="uk-form" method="POST" action="/settings/prefs">
+					{% if mail %}<div class="uk-alert uk-alert-success">{{ mail }}</div>{% end %}
+					{% if mail_error %}<div class="uk-alert uk-alert-danger">{{ mail_error }}</div>{% end %}
+					<form class="uk-form" method="POST" action="/settings">
 					<fieldset>
 						<div class="uk-form-row">
 							<input type="email" name="email" placeholder="mail" 
-								value="{% if prefs.email %}{{prefs.email}}{% end %}" class="uk-width-2-3"/>
+								value="{{prefs.email}}" class="uk-width-2-3"/>
 							<small>{% if not prefs.valid_email %}not confirmed{% end %}</small>
 						</div>
 						<div class="uk-form-row">
@@ -21,6 +23,7 @@
 							</label>
 						</div>
 						<div class="uk-form-row">
+							<input type="hidden" name="email-form" value="1" />
 							<input class="uk-button uk-button-primary" type="submit" value="update"></input>
 						</div>
 						{% module xsrf_form_html() %}
@@ -31,8 +34,9 @@
 			<div class="uk-width-medium-1-2">
 				<div class="uk-panel uk-panel-box">
 					<h3>Password Management</h3>
-					<small class="error">{% if context == "password" %}{{ error }}{% end %}</small>
-					<form class="uk-form" method="POST" action="/settings/password">
+					{% if password %}<div class="uk-alert uk-alert-success">{{ password }}</div>{% end %}
+					{% if password_error %}<div class="uk-alert uk-alert-danger">{{ password_error }}</div>{% end %}
+					<form class="uk-form" method="POST" action="/settings">
 					<fieldset>
 						<div class="uk-form-row">
 							<input type="password" name="current_password" placeholder="current password" class="uk-width-2-3"/>
@@ -44,6 +48,7 @@
 							<input type="password" name="password_dup" placeholder="new password again" class="uk-width-2-3"/>
 						</div>
 						<div class="uk-form-row">
+							<input type="hidden" name="password-form" value="1" />
 							<input class="uk-button uk-button-primary" type="submit" value="change"></input>
 						</div>
 						{% module xsrf_form_html() %}
@@ -51,63 +56,14 @@
 					</form>
 				</div>
 			</div>
-
-			<div class="uk-width-1-1">
-			<h2>API Keys</h2>
-		{% for key in keys %}
-			<div class="uk-panel uk-panel-box uk-panel-box-secondary" style="margin-top: 10px;" id="keys_{{key.key_id}}">
-				{% for char in key.ids %}
-					<img src="http://image.eveonline.com/Character/{{ char }}_64.jpg" style="float:left; padding: 2px;"/>
-				{% end %}
-				<div style="float: left; padding: 5px;"> 
-					Characters: {{ ', '.join(key.names) }} <br />
-					Key ID: {{ key.key_id }}<br />
-					Key Mask: {{ key.mask }}
-				</div>
-				<div class='uk-float-right'>
-					<a onClick='doDelete({{key.key_id}})'><i class='uk-icon-trash-o phony'></i></a>
-				</div>
-			</div>
-		{% end %}
-			<div class="uk-panel uk-panel-box uk-panel-box-secondary" style="margin-top: 10px;">
-				<img src="http://image.eveonline.com/Character/1_64.jpg" style="float:left; padding: 2px;"/>
-				<div style="float: left; padding: 5px;"> 
-					<h4>Add an API key 
-						<small {% if context == "key" %}class="error">{{ error }}{% else %}>Don't have a key? Make one 
-							<a target="_blank" href="https://community.eveonline.com/support/api-key/CreatePredefined?accessMask=17039368">here</a>{% end %}
-						</small>
-					</h4>
-					<form method="POST" action="/settings/keys" class="uk-form">
-						<input type="text" name="keyid" size="8" class="uk-form-small" placeholder="Key ID"></input>
-						<input type="text" name="vcode" size="35" class="uk-form-small" placeholder="Verification Code"></input>
-						<input type="submit" value="add" class="uk-button uk-button-small"></input>
-						{% module xsrf_form_html() %}
-					</form>
-				</div>
-			</div>
-			</div>
+			<div class="uk-width-1-1" id="character_list"></div>
 		</div>
 	</div>
 {% end %}
 {% block js %}
-<script type='text/javascript' src='/static/js/bower_components/jquery/dist/jquery.min.js'></script>
-<script type='text/javascript'>
-	function getCookie(name) {
-		var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
-		return r ? r[1] : undefined;
-	}
-	function doDelete(keyid) {
-		if(!confirm('Are you sure you want to delete this key?'))
-			return;
-		$.ajax({
-			type: 'POST',
-			url: '/settings/keys',
-			data: {'keyid': keyid, '_xsrf': getCookie('_xsrf'), 'remove': 'yes'},
-			success: function() {$('keys_'+keyid).empty()},
-			error: function(xhr) {
-				alert("There was an error when removing this key, please try again");
-			},
-		});
-	}
-</script>
+	<script src="/static/js/bower_components/jquery/dist/jquery.js"></script>
+	<script src="/static/js/bower_components/es5-shim/es5-shim.js"></script>
+	<script src="/static/js/bower_components/es5-shim/es5-sham.js"></script>
+	<script data-main="/static/js/page/settings_boot.js" 
+	src="/static/js/bower_components/requirejs/require.js"></script>
 {% end %}

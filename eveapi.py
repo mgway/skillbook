@@ -6,16 +6,16 @@ api_url = 'https://api.eveonline.com'
 
 
 # -- API proxy methods
-def key_info(id, code):
-    data = {'keyID': id, 'vCode': code}
+def key_info(key_id, key_code):
+    data = {'keyID': key_id, 'vCode': key_code}
     query = Query('/account/APIKeyInfo.xml.aspx', data)
     mask = query.tree.find('*//key').attrib['accessMask']
     return mask, query
 
 
-def character_sheet(id, code, mask, character):
-    allowed(mask, 8)
-    data = {'keyID': id, 'vCode': code, 'characterID': character}
+def character_sheet(key_id, key_code, key_mask, character_id):
+    allowed(key_mask, 8)
+    data = {'keyID': key_id, 'vCode': key_code, 'characterID': character_id}
     query = Query('/char/CharacterSheet.xml.aspx', data)
     
     # Fix up the data a little bit
@@ -52,32 +52,39 @@ def character_sheet(id, code, mask, character):
     return query
 
 
-def market_orders(id, code, mask, character):
-    allowed(mask, 4096)
-    data = {'keyID': id, 'vCode': code, 'characterID': character}
+def character_info(character_id):
+    data = {'characterID': character_id}
+    query = Query('/eve/CharacterInfo.xml.aspx', data)
+    print(query.__dict__)
+    return query
+
+
+def market_orders(key_id, key_code, key_mask, character_id):
+    allowed(key_mask, 4096)
+    data = {'keyID': key_id, 'vCode': key_code, 'characterID': character_id}
     query = Query('/char/MarketOrders.xml.aspx', data)
     return query
 
 
-def market_transactions(id, code, mask, character, row_count=1000):
-    allowed(mask, 4194304)
-    data = {'keyID': id, 'vCode': code, 'characterID': character, 
+def market_transactions(key_id, key_code, key_mask, character_id, row_count=1000):
+    allowed(key_mask, 4194304)
+    data = {'keyID': key_id, 'vCode': key_code, 'characterID': character_id, 
             'rowCount': row_count}
     query = Query('/char/WalletTransactions.xml.aspx', data)
     return query
 
 
-def wallet_journal(id, code, mask, character, row_count=1000):
-    allowed(mask, 2097152)
-    data = {'keyID': id, 'vCode': code, 'characterID': character, 
+def wallet_journal(key_id, key_code, key_mask, character_id, row_count=1000):
+    allowed(key_mask, 2097152)
+    data = {'keyID': key_id, 'vCode': key_code, 'characterID': character_id, 
             'rowCount': row_count}
     query = Query('/char/WalletJournal.xml.aspx', data)
     return query
 
 
-def skill_queue(id, code, mask, character):
-    allowed(mask, 262144)
-    data = {'keyID': id, 'vCode': code, 'characterID': character}
+def skill_queue(key_id, key_code, key_mask, character_id):
+    allowed(key_mask, 262144)
+    data = {'keyID': key_id, 'vCode': key_code, 'characterID': character_id}
     query = Query('/char/SkillQueue.xml.aspx', data)
     return query
 

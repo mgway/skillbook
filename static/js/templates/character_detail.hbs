@@ -6,6 +6,9 @@
         <dt>Birthday</dt><dd>{{formatTime birthday}}</dd>
         <dt>Corporation</dt><dd>{{corporation_name}}</dd>
         <dt>Skillpoints</dt><dd id="skillpoints">{{commas skillpoints}}</dd>
-        <dt>Clone</dt><dd>{{commas clone_skillpoints}} ({{clone_grade}})</dd>
+        <dt>Clone</dt>
+        <dd {{#compare skillpoints clone_skillpoints op=">"}}class="error"{{/compare}} title="Insufficient Clone">
+            {{commas clone_skillpoints}} ({{clone_grade}})
+        </dd>
     </dl>
 </div>

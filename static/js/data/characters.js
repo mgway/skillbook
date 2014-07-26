@@ -21,7 +21,7 @@ define(
                 if (characters === null || moment() - moment(characters.refreshTime) > this.attr.interval) {
                     this.get({
                         xhr: {
-                            url: '/api/characters/'
+                            url: '/api/character/'
                         },
                         events: {
                             done: 'dataCharactersResponse'
@@ -47,7 +47,7 @@ define(
                 if (sheet === null || moment() - moment(sheet.refreshTime) > this.attr.interval) {
                     this.get({
                         xhr: {
-                            url: '/api/sheet/' + data.id
+                            url: '/api/character/' + data.id
                         },
                         events: {
                             done: 'apiCharacterDetailResponse'
@@ -65,7 +65,7 @@ define(
                 if (queue === null || moment() - moment(queue.refreshTime) > this.attr.interval) {
                     this.get({
                         xhr: {
-                            url: '/api/queue/' + data.id
+                            url: '/api/character/' + data.id + "/queue"
                         },
                         events: {
                             done: 'apiCharacterQueueResponse'
@@ -83,7 +83,7 @@ define(
                 if (skills === null || moment() - moment(skills.refreshTime) > this.attr.interval) {
                     this.get({
                         xhr: {
-                            url: '/api/skills/' + data.id
+                            url: '/api/character/' + data.id + "skills"
                         },
                         events: {
                             done: 'apiCharacterSkillsResponse'

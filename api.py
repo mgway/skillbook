@@ -4,6 +4,7 @@ import cache
 import datetime
 from cache import cached
 from psycopg2.tz import FixedOffsetTimezone
+import traceback
 
 def perform_updates(key_id=None):
     if key_id:
@@ -26,6 +27,10 @@ def perform_updates(key_id=None):
                 data = eveapi.skill_queue(row.key_id, row.vcode, row.mask, row.character_id)
                 db.save_skill_queue(row.character_id, data.skillqueue)
                 cache.remove("*:queue:%s" % row.character_id)
+            elif row.api_method == 'CharacterInfo':
+                data = eveapi.character_info(row.character_id)
+                db.save_character_info(data)
+                cache.remove("*:sheet:%s" % row.character_id)
             else:
                 raise SkillbookException('Unknown API method %s' % row.api_method)
 
@@ -34,6 +39,7 @@ def perform_updates(key_id=None):
                 'response_code': 200, 'response_error': '', 'ignored': False})
             results.append(result)
         except Exception as e:
+            traceback.print_exc()
             # Ignore this call in the future if we've gotten an error before
             ignored = True if row.response_code == 500 else False
 
@@ -42,6 +48,10 @@ def perform_updates(key_id=None):
             results.append(result)
 
     db.save_update_list(results)
+
+
+def get_keys(user_id):
+    return [key.raw for key in db.get_keys(user_id)]
 
 
 def remove_key(user_id, key_id):
@@ -56,9 +66,8 @@ def add_key(user_id, key_id, vcode):
     requirements = db.get_api_calls()
     grants = []
     for req in requirements:
-        if int(mask) & req.mask == 0:
-            if req.is_required:
-                raise SkillbookException('The supplied key is missing the %s permission' % req.name)
+        if int(mask) & req.mask == 0 and req.mask != 0 and req.is_required:
+            raise SkillbookException('The supplied key is missing the %s permission' % req.name)
         else:
             grants.append({'name': req.name, 'ignored': not req.is_required})
 

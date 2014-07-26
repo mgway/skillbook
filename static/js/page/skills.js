@@ -7,8 +7,8 @@ define(
         'component/character_skills',
         'component/character_refresh',
         'data/characters',
-        'schedule', 
-        'history', 
+        'schedule',
+        'history',
         'common/liveCountdown'
     ],
     
@@ -34,7 +34,7 @@ define(
                 }
             });
             
-            setInterval(countdown, 5000)
+            setInterval(countdown, 5000);
         }
         
         return initialize;

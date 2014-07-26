@@ -1,0 +1,22 @@
+<h2>API Keys</h2>
+{{#keys}}
+{{>key_partial}}
+{{/keys}}
+
+
+<div class="uk-panel uk-panel-box uk-panel-box-secondary" style="margin-top: 10px;">
+	<img src="http://image.eveonline.com/Character/1_64.jpg" style="float:left; padding: 2px;"/>
+	<div style="float: left; padding: 5px;"> 
+		<h4>Add an API key
+			<small>Don't have a key? Make one 
+				<a target="_blank" href="https://community.eveonline.com/support/api-key/CreatePredefined?accessMask=17039368">here</a>
+			</small>
+		</h4>
+		<form id="character-add-form" class="uk-form">
+			<input type="text" id="keyid" size="8" class="uk-form-small" placeholder="Key ID"></input>
+			<input type="text" id="vcode" size="35" class="uk-form-small" placeholder="Verification Code"></input>
+			<input type="submit" value="add" class="uk-button uk-button-small"></input>
+			<span class="error" id='character-add-form-error'></span>
+		</form>
+	</div>
+</div>
