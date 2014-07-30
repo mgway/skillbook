@@ -11,7 +11,7 @@
 	</head>
 
 	<body class="uk-height-1-1">
-		<div  id="wrapper">
+		<div id="wrapper">
 			{% if current_user %}
 			<nav class="uk-navbar uk-navbar-attached">
 				<div class="uk-container uk-container-center">
@@ -33,6 +33,8 @@
 				&copy; 2014 skillbook developers. All EVE Online related materials are property of CCP Games hf. 
 				<a href="/info">about</a> | <a href="/info">legal</a> | <a href="/help">help</a>
 			</div>
+			<script type="text/javascript" src="/static/js/bower_components/jquery/dist/jquery.js"></script>
+			<script type="text/javascript" src="/static/js/uikit.min.js"></script>
 			{% block js %}{% end %}
 		</div>
 	</body>

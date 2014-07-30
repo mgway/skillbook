@@ -1,59 +1,52 @@
 {% extends "base.html" %}
 
 {% block main %}
-	<div class="uk-vertical-align uk-height-1-1 uk-text-center">
-		<div class="uk-vertical-align-middle uk-container-center">
+	<div class="uk-container-center uk-width-medium-1-2 uk-width-large-1-4" style="padding-top: 100px">
 		<h1 class="brand">skillbook</h1>
 		<p>The next-generation tool for skill monitoring &amp; planning in EVE Online<p>
-		<p><a href="#" id="loginLink">login</a> | <a href="#" id="registerLink">register</a> </p>
-
-		<div id="login" style="display: none">
-			<small class="error">{{ error }}</small>
-			<form action="/login" method="POST" class="uk-form">
-				<input type="text" name="username" id="login_username" placeholder="username"></input> 
-				<input type="password" name= "password" placeholder="password"></input> 
-				<input type="submit" value="login" class="uk-button uk-button-primary"></input>
-				{% module xsrf_form_html() %}
-			</form>
-			<small>This isn't (or shouldn't be) the same as your EVE username and password</small>
-		</div>
-
-		<div id="register" style="display: none">
-			<small class="error">{{ error }}</small>
-			<form action="/register" method="POST" class="uk-form">
-				<fieldset data-uk-margin>
-				<input type="text" name="username" id="reg_username" placeholder="username"></input> 
-				<input type="password" name= "password" placeholder="password"></input> 
-				<input type="password" name= "password_rep" placeholder="password again"></input> 
-				<input type="submit" value="register" class="uk-button uk-button-primary"></input>
-				{% module xsrf_form_html() %}
-				</fieldset>
-			</form>
-			<small>Even though passwords are encrypted, please refrain
-				from using your EVE Online password</small>
-		</div>
-	</div>
+		<ul class="uk-subnav uk-subnav-line" data-uk-switcher="{connect:'#tab-content'}">
+		    <li class="uk-active login"><a>login</a></li>
+		    <li class="register"><a>register</a></li>
+		</ul>
+		<ul id="tab-content" class="uk-switcher uk-margin">
+			<li>
+				<form action="/login" method="POST" class="uk-form">
+					<fieldset>
+						<small>This isn't (or shouldn't be) the same as your EVE username and password</small>
+						<div class="uk-form-row">
+							<input type="text" name="username" id="login_username" placeholder="username"></input>
+						</div>
+						<div class="uk-form-row">
+							<input type="password" id="login_password" name="password" placeholder="password"></input>
+						</div>
+						<div class="uk-form-row">
+							<input type="submit" value="login" class="uk-button uk-button-primary"></input>
+						</div>
+						{% module xsrf_form_html() %}
+					</fieldset>
+				</form>
+			</li>
+			<li>
+				<form action="/register" method="POST" class="uk-form">
+					<fieldset>
+						<small>Even though passwords are encrypted, please refrain
+							from using your EVE Online password</small>
+						<div class="uk-form-row">
+							<input type="text" name="username" id="reg_username" placeholder="username"></input>
+						</div>
+						<div class="uk-form-row">
+							<input type="password" name= "password" placeholder="password"></input>
+						</div>
+						<div class="uk-form-row">
+							<input type="password" name= "password_rep" placeholder="password again"></input>
+						</div>
+						<div class="uk-form-row">
+							<input type="submit" value="register" class="uk-button uk-button-primary"></input>
+						</div>
+						{% module xsrf_form_html() %}
+					</fieldset>
+				</form>
+			</li>
+		</ul>
 	</div>
 {% end %}
-{% block js %}
-<script type="text/javascript" src="/static/js/bower_components/jquery/dist/jquery.js"></script>
-<script type="text/javascript">
-$(document).ready(function () {
-	var showLogin = function() {
-		$('#register').hide(); 
-		$('#login').toggle();
-		$('#login_username').focus();
-	};
-	var showRegistration = function() {
-		$('#login').hide(); 
-		$('#register').toggle();
-		$('#reg_username').focus();
-	};
-	$('#loginLink').click(function() { showLogin() });
-	$('#registerLink').click(function() { showRegistration() });
-	if(document.location.search.indexOf('activity=login') != -1) { showLogin() }
-	if(document.location.search.indexOf('activity=register') != -1) { showRegistration()}
-});
-</script>
-{% end %}
-

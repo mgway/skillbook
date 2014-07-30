@@ -31,8 +31,17 @@ html {
 	color: #00a8e6;
 }
 
+.uk-active a {
+	font-weight: bold;
+}
+
 #footer a {
 	color: #777;
+}
+
+.success {
+	color: #842107;
+	font-weight: bold;
 }
 
 .error {

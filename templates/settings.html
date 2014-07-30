@@ -6,7 +6,7 @@
 		<div class="uk-grid">
 			<div class="uk-width-medium-1-2">
 				<div class="uk-panel uk-panel-box">
-					<h3>Preferences &amp; Stuff</h3>
+					<h3 class="uk-panel-title">Preferences &amp; Stuff</h3>
 					{% if mail %}<div class="uk-alert uk-alert-success">{{ mail }}</div>{% end %}
 					{% if mail_error %}<div class="uk-alert uk-alert-danger">{{ mail_error }}</div>{% end %}
 					<form class="uk-form" method="POST" action="/settings">

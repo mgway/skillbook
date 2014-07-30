@@ -57,13 +57,13 @@ def username_available(username):
 
 def check_login(username, password):
     with _cursor(conn) as c:
-        r = query_one(c, 'SELECT user_id, password, salt FROM user WHERE username = %s', (username,))
+        r = query_one(c, 'SELECT user_id, password, salt FROM skillbook_user WHERE username = %s', (username,))
     if r is None:
         return
     salt = binascii.unhexlify(bytes(r.salt))
     h = hmac.new(salt, password.encode('utf-8'), hashlib.sha256)
     if h.hexdigest() == r.password:
-        return r.id
+        return r.user_id
 
 
 def change_password(userid, password, new_password):

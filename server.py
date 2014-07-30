@@ -15,7 +15,7 @@ import eveapi
 
 class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
-        user_json = self.get_secure_cookie("skillbook_user")
+        user_json = self.get_secure_cookie('skillbook_user')
         if not user_json: return None
         return tornado.escape.json_decode(user_json)
     def set_current_user(self, user_id):
@@ -129,7 +129,7 @@ class SettingsHandler(BaseHandler):
         messages = self.messages.copy()
         
         if self.get_argument('email-form', default=None):
-            mail = self.get_argument('email', default="")
+            mail = self.get_argument('email', default='')
             letter = self.get_argument('newsletter', default=False)
             db.change_preferences(user_id, mail, letter)
             messages['mail'] = 'Mail preferences updated'
@@ -139,11 +139,11 @@ class SettingsHandler(BaseHandler):
             new_pw = self.get_argument('password')
             new_pw_dup = self.get_argument('password_dup')
             if new_pw != new_pw_dup:
-                messages['password_error'] = "Passwords don't match"
+                messages['password_error'] = 'Passwords don\'t match'
             else:
                 try:
                     db.change_password(user_id, password, new_pw)
-                    messages['password'] = 'Password successfully a'
+                    messages['password'] = 'Password successfully changed'
                 except db.UserError as e:
                     messages['password_error'] = e.message
         
