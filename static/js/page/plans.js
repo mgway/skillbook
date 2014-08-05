@@ -1,20 +1,20 @@
 define(
     [
         'component/plan_title',
+        'component/plan_list',
         'data/plans',
         'schedule',
         'history',
     ],
     
-    function(PlanTitle, PlanStore, Schedule, 
-                History) {
+    function(PlanTitle, PlanList, PlanStore, Schedule, History) {
 
         function initialize() {
             PlanStore.attachTo(document);
 
             PlanTitle.attachTo("#pagetitle");
+            PlanList.attachTo("#plan_list");
             
-            Schedule.attachTo(document, {tickInterval: 10});
             History.attachTo(window, {
                 routeBase: '/plans',
                 routes: {'': 'uiPlansRequest', 

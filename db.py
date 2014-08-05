@@ -15,13 +15,16 @@ conn_string = "host='%s' dbname='%s' user='%s' password='%s'" % \
 conn = psycopg2.connect(conn_string)
 
 
-def query(cursor, sql, args):
+def query(cursor, sql, args, as_row_obj=False):
     cursor.execute(sql, args)
     while True:
         r = cursor.fetchone()
         if r is None:
             break
-        yield Row(r)
+        if as_row_obj:
+            yield Row(r)
+        else:
+            yield r
 
 
 def _cursor(connection):
@@ -30,7 +33,7 @@ def _cursor(connection):
 
 
 def query_one(cursor, sql, *args):
-    results = query(cursor, sql, *args)
+    results = query(cursor, sql, *args, as_row_obj=True)
     try:
          r = next(results)
     except StopIteration:
@@ -66,7 +69,7 @@ def check_login(username, password):
         return r.user_id
 
 
-def change_password(userid, password, new_password):
+def change_password(user_id, password, new_password):
     with _cursor(conn) as c:
         r = query_one(c, 'SELECT password, salt FROM skillbook_user WHERE user_id = %s', (userid,))
         salt = binascii.unhexlify(bytes(r.salt))
@@ -74,23 +77,23 @@ def change_password(userid, password, new_password):
         if h.hexdigest() == r.password:
             hashed, newsalt = __hash(new_password)
             c.execute('UPDATE skillbook_user SET (password, salt) = \
-                (%s, %s) WHERE user_id = %s', (hashed, newsalt, userid))
+                (%s, %s) WHERE user_id = %s', (hashed, newsalt, user_id))
             conn.commit()
         else:
             raise UserError("Incorrect current password")
 
 
-def change_preferences(userid, mail, newsletter):
+def change_preferences(user_id, mail, newsletter):
     with _cursor(conn) as c:
         c.execute('UPDATE skillbook_user SET email = %s, newsletter = %s WHERE user_id = %s', 
-                (mail, newsletter, userid))
+                (mail, newsletter, user_id))
         conn.commit()
 
 
-def get_preferences(userid):
+def get_preferences(user_id):
     with _cursor(conn) as c:
         r = query_one(c, 'SELECT email, valid_email, newsletter FROM skillbook_user WHERE user_id = %s', 
-                (userid,))
+                (user_id,))
         return r
 
 
@@ -213,7 +216,7 @@ def save_character_sheet(character):
         conn.commit()
         
         current_skills = query(c, 'SELECT type_id, level, skillpoints FROM character_skill WHERE character_id = %s', 
-                (character.characterid,))
+                (character.characterid,), as_row_obj=True)
 
         # Transform skills into a dict instead of a list
         skills = defaultdict()
@@ -307,7 +310,7 @@ def get_update_for_key(key_id):
         r = query(c, 'SELECT cas.character_id, cas.api_method, k.vcode, k.key_id, k.mask, cas.response_code \
                 FROM character_api_status cas INNER JOIN api_key k on k.character_id = cas.character_id \
                 AND k.key_id = cas.key_id WHERE (cas.cached_until < CURRENT_TIMESTAMP OR cas.cached_until IS NULL) \
-                AND NOT is_ignored AND k.key_id = %s', (key_id,))
+                AND NOT is_ignored AND k.key_id = %s', (key_id,), as_row_obj=True)
         return list(r)
 
 
@@ -317,7 +320,7 @@ def get_update_list():
         r = query(c, 'SELECT cas.character_id, cas.api_method, k.vcode, k.key_id, k.mask, cas.response_code \
                 FROM character_api_status cas INNER JOIN api_key k on k.character_id = cas.character_id \
                 AND k.key_id = cas.key_id WHERE (cas.cached_until < CURRENT_TIMESTAMP OR cas.cached_until IS NULL) \
-                AND NOT is_ignored', ())
+                AND NOT is_ignored', (), as_row_obj=True)
         return list(r)
 
 
@@ -334,9 +337,9 @@ def save_update_list(updates):
 # -- Static data
 def get_skills():
     with _cursor(conn) as c:
-        r = query(c, 'SELECT type_id, skill.group_id, group.name group_name, description, skill.name, \
-                baseprice, rank, primary_attribute, secondary_attribute FROM skill \
-                INNER JOIN inventory_group group ON skill.group_id = group.group_id', (None,))
+        r = query(c, 'SELECT type_id, skill.group_id, ig.name group_name, description, skill.name, \
+        base_price, rank, primary_attribute, secondary_attribute FROM skill \
+        INNER JOIN inventory_group ig ON skill.group_id = ig.group_id;', (None,))
         return list(r)
 
 
@@ -350,24 +353,34 @@ def get_api_calls(required_only=False):
 
 
 # -- Plans
-def create_plan(user_id, character_id, name, description):
+def add_plan(user_id, character_id, name, description):
     with _cursor(conn) as c:
         c.execute('INSERT INTO plan (plan_id, user_id, character_id, name, description, created) \
                 VALUES (DEFAULT, %s, %s, %s, %s, CURRENT_TIMESTAMP)',
                 (user_id, character_id, name, description))
-        r = query_one(c, "SELECT CURRVAL('plan_planid_seq')", None)
         conn.commit()
-    return r.currval
 
 
-def get_plans(user_id, character_id):
+def get_plans(user_id, character_id = None):
     with _cursor(conn) as c:
-        r = query(c, 'SELECT plan_id, name, description FROM plans WHERE user_id = %s AND character_id = %s', 
+        if character_id:
+            r = query(c, 'SELECT plan_id, name, description FROM plan WHERE user_id = %s AND character_id = %s', 
                 (user_id, character_id))
+        else:
+            r = query(c, 'SELECT p.plan_id, p.name, p.description, p.character_id, c.name character_name FROM plan p \
+                INNER JOIN eve_character c ON c.character_id = p.character_id WHERE user_id = %s', (user_id,))
         return list(r)
 
 
-def insert_plan_entries(plan_id, items):
+def get_plan(user_id, plan_id):
+    with _cursor(conn) as c:
+        r = query_one(c, 'SELECT p.plan_id, p.name, p.description, p.character_id, c.name character_name \
+            FROM plan p INNER JOIN eve_character c ON c.character_id = p.character_id \
+            WHERE user_id = %s and plan_id = %s', (user_id, plan_id))
+        return r
+        
+
+def add_plan_entries(plan_id, items):
     with _cursor(conn) as c:
         c.execute('INSERT INTO plan_entry (plan_id, type_id, level, sprequired, priority, sort) \
                 VALUES (%(planid)s, %(typeid)s, %(level)s, %(sprequired)s, %(priority)s, %(sort)s)',
@@ -375,10 +388,10 @@ def insert_plan_entries(plan_id, items):
         conn.commit()
 
 
-def insert_plan_entry(plan_id, type_id, level, sprequired, priority, sort, meta=None):
+def add_plan_entry(plan_id, type_id, level, sp_required, priority, sort, meta=None):
     with _cursor(conn) as c:
         c.execute('INSERT INTO plan_entry (plan_id, type_id, level, sprequired, priority, sort) \
-                VALUES (%s, %s, %s, %s, %s, %s)', (plan_id, type_id, level, sprequired, priority, sort))
+                VALUES (%s, %s, %s, %s, %s, %s)', (plan_id, type_id, level, sp_required, priority, sort))
         conn.commit()
 
 
@@ -400,11 +413,14 @@ class UserError(Exception):
 
 
 # Convert the database result from a dict to attributes, because r.value > r['value'] 
-class Row:
+class Row(dict):
     def __init__(self, result):
         for k,v in result.items():
             setattr(self, k, v)
         self.raw = result
-
+    
     def __str__(self):
-        return 'Row: ' + str(self.__dict__)
+        return 'Row: ' + str(self.raw)
+    
+    def __repr__(self):
+        return '<Row: ' + str(self.raw) + '>'

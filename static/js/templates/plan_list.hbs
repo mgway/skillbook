@@ -1,0 +1,17 @@
+{{#plans}}
+<article class="uk-comment phony" id="plan_{{ plan_id }}">
+	<header class="uk-comment-header">
+		<img class="uk-comment-avatar" 
+			src="http://image.eveonline.com/Character/{{ character_id }}_64.jpg" 
+			style="float:left; padding: 2px;">
+		<h4 class="uk-comment-title">{{ name }}</h4>
+		<div class="uk-comment-meta">
+			For: {{ character_name }}
+			{{ description }}
+		</div>
+		<div class="uk-float-right">
+			<a><i data-planId="{{key_id}}" class="uk-icon-trash-o phony"></i></a>
+		</div>
+	</header>
+</article>
+{{/plans}}

@@ -5,8 +5,6 @@ import tornado.escape
 import tornado.web
 import os
 import simplejson 
-import redis
-import traceback
 import db
 import api
 import config
@@ -152,7 +150,7 @@ class SettingsHandler(BaseHandler):
 
 
 # API Methods
-class ApiKeyHandler(AjaxHandler):
+class KeyApiHandler(AjaxHandler):
     @tornado.web.authenticated
     def get(self, key_id = None):
         user_id = self.get_current_user()
@@ -160,7 +158,7 @@ class ApiKeyHandler(AjaxHandler):
             self.set_status(405)
         else:
             self.write_message(api.get_keys(user_id), pre=False)
-    
+        
     @tornado.web.authenticated
     def post(self, key_id = None):
         user_id = self.get_current_user()
@@ -175,7 +173,7 @@ class ApiKeyHandler(AjaxHandler):
         except (simplejson.JSONDecodeError, KeyError):
             self.set_status(400)
             return self.write_message({'error': 'Enter a valid Key ID and vCode'}, pre=False)
-
+        
         try:
             api.add_key(user_id, key_id, vcode)
             self.set_status(201)
@@ -186,7 +184,7 @@ class ApiKeyHandler(AjaxHandler):
         except Exception as e:
             self.set_status(500)
             self.write_message({'error': 'An unknown error has occurred'}, pre=False)
-          
+        
     @tornado.web.authenticated  
     def delete(self, key_id = None):
         user_id = self.get_current_user()
@@ -198,11 +196,11 @@ class ApiKeyHandler(AjaxHandler):
             self.set_status(204)
 
 
-class CharacterHandler(AjaxHandler):
+class CharacterApiHandler(AjaxHandler):
     @tornado.web.authenticated
     def get(self, character_id = None, subtype = None):
         user_id = self.get_current_user()
-
+        
         try:
             if not character_id:
                 characters = api.get_characters(user_id)
@@ -213,21 +211,73 @@ class CharacterHandler(AjaxHandler):
             elif subtype == 'queue':
                 skills = api.get_character_queue(user_id, character_id)
                 self.write_message(skills)
-            else:
+            elif character_id and subtype == None:
                 sheet = api.get_character_sheet(user_id, character_id)
                 self.write_message(sheet)
-
+            else:
+                self.set_status(404)
+                self.write_message({'error': 'Resource not found'}, pre=False)
+            
         except api.SkillbookException as e:
-            self.set_status(403, e.message)
+            self.set_status(403)
             self.write_message({'error': e.message}, pre=False)
 
 
-class StaticAjaxHandler(AjaxHandler):
+class PlanApiHandler(AjaxHandler):
+    @tornado.web.authenticated
+    def get(self, plan_id = None, entry_id = None):
+        user_id = self.get_current_user()
+        
+        if not plan_id:
+            self.write_message(api.get_plans(user_id))
+        elif plan_id and entry_id == None:
+            self.write_message(api.get_plan(user_id, plan_id))
+        else:
+            self.set_status(404)
+            self.write_message({'error': 'Resource not found'}, pre=False)
+        
+    @tornado.web.authenticated
+    def post(self, plan_id = None, entry_id = None):
+        user_id = self.get_current_user()
+        
+        try:
+            body = simplejson.loads(self.request.body)
+        except simplejson.JSONDecodeError:
+            self.set_status(400)
+            return self.write_message({'error': 'Character ID and plan name are required'}, pre=False)
+        
+        if not plan_id:
+            try:
+                character_id = body['character_id']
+                name = body['name']
+                description = body['description']
+            except KeyError:
+                self.set_status(400)
+                return self.write_message({'error': 'Character ID and plan name are required'}, pre=False)
+                
+            plans = api.add_plan(user_id, character_id, name, description)
+            self.write_message(plans)
+        elif plan_id:
+            try:
+                plan_id = body['plan_id']
+                type_id = body['name']
+                level = body['description']
+                priority = body['priority']
+                sort = body['sort']
+                meta = body.get('sort', None)
+            except KeyError:
+                self.set_status(400)
+                return self.write_message({'error': 'Required attribute was missing'}, pre=False)
+                
+            api.add_plan_entry(plan_id, type_id, level, priority, sort, meta=None)
+    
+class StaticApiHandler(AjaxHandler):
+    @tornado.web.authenticated
     def get(self, command):
         args = self.get_argument('args', '')
-
+        
         if command == 'skills':
-            self.write_message(api.get_skills())
+            self.write_message(api.get_all_skills())
         else:
             print('unhandled command: ' + str(command))
 
@@ -243,16 +293,17 @@ if __name__ == "__main__":
             (r'/register', RegistrationHandler),
             (r'/skills.*', SkillsHandler),
             (r'/plans.*', PlansHandler),
-            (r'/api/static/(.+)', StaticAjaxHandler),
-            (r'/api/character/(?P<character_id>[\d]+)?/?(?P<subtype>[\w]+)?/?', CharacterHandler),
-            (r'/api/key/(?P<key_id>[\d]+)?/?', ApiKeyHandler),
+            (r'/api/static/(.+)', StaticApiHandler),
+            (r'/api/plan/(?P<plan_id>[\d]+)?/?(?P<entry_id>[\d]+)?/?', PlanApiHandler),
+            (r'/api/character/(?P<character_id>[\d]+)?/?(?P<subtype>[\w]+)?/?', CharacterApiHandler),
+            (r'/api/key/(?P<key_id>[\d]+)?/?', KeyApiHandler),
             (r'/settings', SettingsHandler),
         ],
         template_path=os.path.join(os.path.dirname(__file__), 'templates'),
         static_path=os.path.join(os.path.dirname(__file__), 'static'),
         cookie_secret=config.web.cookie_secret,
         xsrf_cookies=True,
-        login_url='login',
+        login_url='/login',
         debug=config.web.debug
     )
 

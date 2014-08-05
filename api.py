@@ -2,7 +2,7 @@ import db
 import eveapi
 import cache
 import datetime
-from cache import cached
+from cache import cached, bust
 from psycopg2.tz import FixedOffsetTimezone
 import traceback
 
@@ -21,16 +21,16 @@ def perform_updates(key_id=None):
                 # don't care to update that often
                 data.cached_until = data.cached_until + datetime.timedelta(minutes=30)
                 db.save_character_sheet(data)
-                cache.remove("*:sheet:%s" % row.character_id)
-                cache.remove("*:skills:%s" % row.character_id)
+                cache.remove("character-sheet:%s" % row.character_id)
+                cache.remove("character-skills:%s" % row.character_id)
             elif row.api_method == 'SkillQueue':
                 data = eveapi.skill_queue(row.key_id, row.vcode, row.mask, row.character_id)
                 db.save_skill_queue(row.character_id, data.skillqueue)
-                cache.remove("*:queue:%s" % row.character_id)
+                cache.remove("character-queue:%s" % row.character_id)
             elif row.api_method == 'CharacterInfo':
                 data = eveapi.character_info(row.character_id)
                 db.save_character_info(data)
-                cache.remove("*:sheet:%s" % row.character_id)
+                cache.remove("character-sheet:%s" % row.character_id)
             else:
                 raise SkillbookException('Unknown API method %s' % row.api_method)
 
@@ -49,16 +49,17 @@ def perform_updates(key_id=None):
 
     db.save_update_list(results)
 
-
+# API key management
 def get_keys(user_id):
-    return [key.raw for key in db.get_keys(user_id)]
+    return db.get_keys(user_id)
 
 
+@bust('characters', arg_pos=0)
 def remove_key(user_id, key_id):
     db.remove_key(user_id, key_id)
-    cache.remove('characters:%s' % user_id)
 
 
+@bust('characters', arg_pos=0)
 def add_key(user_id, key_id, vcode):
     mask, characters = eveapi.key_info(key_id, vcode)
 
@@ -74,46 +75,73 @@ def add_key(user_id, key_id, vcode):
     db.add_key(user_id, key_id, vcode, mask, characters.key.characters.rows)
     db.add_grants(key_id, grants, characters.key.characters.rows)
     perform_updates(key_id=key_id)
-    cache.remove('*:characters:%s' % user_id)
 
-
+# Character/skills
 @cached('characters', arg_pos=0, expires=30)
 def get_characters(user_id):
-    return [char.raw for char in db.get_character_briefs(user_id)]
+    return db.get_character_briefs(user_id)
 
 
-@cached('sheet', arg_pos=1)
+@cached('character-sheet', arg_pos=1)
 def get_character_sheet(user_id, character_id):
-    if db.get_character(user_id, character_id):
+    if db.get_character(user_id, character_id) != None:
         return db.get_character_sheet(character_id).raw
     else:
         raise SkillbookException('You do not have permission to view this character')
 
 
-@cached('skills', arg_pos=1)
+@cached('character-skills', arg_pos=1)
 def get_character_skills(user_id, character_id):
-    if db.get_character(user_id, character_id):
-        skills = db.get_character_skills(character_id)
-        return [skill.raw for skill in skills]
+    if db.get_character(user_id, character_id) != None:
+        return db.get_character_skills(character_id)
     else:
         raise SkillbookException('You do not have permission to view this character')
 
 
-@cached('queue', arg_pos=1)
+@cached('character-queue', arg_pos=1)
 def get_character_queue(user_id, character_id):
-    if db.get_character(user_id, character_id):
-        skills = db.get_skill_queue(character_id)
-        return [skill.raw for skill in skills]
+    if db.get_character(user_id, character_id) != None:
+        return db.get_skill_queue(character_id)
     else:
         raise SkillbookException('You do not have permission to view this character')
+
+
+@cached('character-plans', arg_pos=1)
+def get_character_plans(user_id, character_id):
+    if db.get_character(user_id, character_id) != None:
+        return db.get_plans(user_id, character_id)
+    else:
+        raise SkillbookException('You do not have permission to view this character')
+
+# Plans
+@cached('plans', arg_pos=0)
+def get_plans(user_id):
+    return db.get_plans(user_id)
+
+
+@bust('plans', arg_pos=0)
+def add_plan(user_id, character_id, name, description):
+    plan_id = db.add_plan(user_id, character_id, name, description)
+
+
+@cached('plan', arg_pos=1)
+def get_plan(user_id, plan_id):
+    plan = db.get_plan(user_id, plan_id).raw
+    plan['entries'] = db.get_plan_entries(plan_id)
+    return plan
+
+
+@bust('plan', arg_pos=0)
+def add_plan_entry(plan_id, type_id, level, priority, sort, meta=None):
+    db.add_plan_entry(plan_id, type_id, level, priority, sort, meta)
 
 
 @cached('static:skills')
-def get_skills():
+def get_all_skills():
     db_skills = db.get_skills()
     skills_dict = dict()
     for skill in db_skills:
-        skills_dict[skill.type_id] = skill.raw
+        skills_dict[skill['type_id']] = skill
     return skills_dict
 
 

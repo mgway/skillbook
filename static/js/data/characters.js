@@ -8,9 +8,9 @@ define(
         'underscore'
     ],
     function(defineComponent, ajax, moment, _) {
-        return defineComponent(todos, ajax);
+        return defineComponent(characters, ajax);
         
-        function todos() {
+        function characters() {
             
             this.defaultAttrs({
                 interval: 300000
@@ -83,7 +83,7 @@ define(
                 if (skills === null || moment() - moment(skills.refreshTime) > this.attr.interval) {
                     this.get({
                         xhr: {
-                            url: '/api/character/' + data.id + "skills"
+                            url: '/api/character/' + data.id + "/skills"
                         },
                         events: {
                             done: 'apiCharacterSkillsResponse'

@@ -57,7 +57,9 @@ def fetch(key, result='json'):
             return data # 'native'
 
 
-def remove(key):
+# Remove the key in any format
+def remove(key, all_formats=True):
+    key = '*:' + key if all_formats else key 
     r.delete(r.keys(key))
 
 
@@ -77,6 +79,28 @@ def cached(key, arg_pos=None, kwarg_name=None, method='json', expires=900):
             if not data:
                 result = fn(*args, **kwargs)
                 data = store(full_key, result, method=method, expires=expires)
+            return data
+        return wrapped_fn
+    return wrap
+
+
+def bust(key, arg_pos=None, kwarg_name=None, all_formats=True):
+    def wrap(fn, *args, **kwargs):
+        def wrapped_fn(*args, **kwargs):
+
+            # Extract a unique identifier for the key out of the 
+            # method invocation
+            full_key = key
+            if arg_pos != None:
+                full_key = '%s:%s' % (key, args[arg_pos])
+            elif kwarg_name != None:
+                full_key = '%s:%s' % (key, kwargs[kwarg_name])
+                
+            full_key = '*:' + full_key if all_formats else full_key
+                
+            data = fn(*args, **kwargs)
+            r.delete(r.keys(full_key))
+
             return data
         return wrapped_fn
     return wrap
