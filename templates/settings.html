@@ -14,7 +14,13 @@
 						<div class="uk-form-row">
 							<input type="email" name="email" placeholder="mail" 
 								value="{{prefs.email}}" class="uk-width-2-3"/>
-							<small>{% if not prefs.valid_email %}not confirmed{% end %}</small>
+							<small>
+								{% if prefs.valid_email %}
+									<i class="fa fa-check"></i> confirmed
+								{% else %}
+									<a class="phony" id="confirmation">click to confirm</a>
+								{% end %}
+							</small>
 						</div>
 						<div class="uk-form-row">
 							<label>
@@ -22,6 +28,13 @@
 								Send me mail about stuff (not actually a thing yet)
 							</label>
 						</div>
+						{% if prefs.unsubscribed %}
+							<div class="uk-form-row">
+								<label>
+									<input type="checkbox" name="resubscribe"/> Un-unsubscribe from all emails
+								</label>
+							</div>
+						{% end %}
 						<div class="uk-form-row">
 							<input type="hidden" name="email-form" value="1" />
 							<input class="uk-button uk-button-primary" type="submit" value="update"></input>
@@ -66,4 +79,21 @@
 	<script src="/static/js/bower_components/es5-shim/es5-sham.js"></script>
 	<script data-main="/static/js/page/settings_boot.js" 
 	src="/static/js/bower_components/requirejs/require.js"></script>
+	<script type="text/javascript">
+		function getCookie(name) {
+			var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
+			return r ? r[1] : undefined;
+		}
+		$('#confirmation').on('click', function(){
+			var that = $(this);
+			$.ajax({
+				type: 'POST',
+				headers: {'X-Xsrftoken': getCookie('_xsrf')},
+				url: '/mail/confirm',
+				success: function() {
+					that.html('<i class="fa fa-envelope"></i> mail sent');
+				}
+			});
+		});
+	</script>
 {% end %}

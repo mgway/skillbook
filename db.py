@@ -71,7 +71,7 @@ def check_login(username, password):
 
 def change_password(user_id, password, new_password):
     with _cursor(conn) as c:
-        r = query_one(c, 'SELECT password, salt FROM skillbook_user WHERE user_id = %s', (userid,))
+        r = query_one(c, 'SELECT password, salt FROM skillbook_user WHERE user_id = %s', (user_id,))
         salt = binascii.unhexlify(bytes(r.salt))
         h = hmac.new(salt, password.encode('utf-8'), hashlib.sha256)
         if h.hexdigest() == r.password:
@@ -83,18 +83,52 @@ def change_password(user_id, password, new_password):
             raise UserError("Incorrect current password")
 
 
-def change_preferences(user_id, mail, newsletter):
+def change_preferences(user_id, mail, newsletter, resubscribe):
     with _cursor(conn) as c:
-        c.execute('UPDATE skillbook_user SET email = %s, newsletter = %s WHERE user_id = %s', 
-                (mail, newsletter, user_id))
+        r = query_one(c, 'SELECT salt, email, unsubscribed FROM skillbook_user WHERE user_id = %s', (user_id,))
+        salt = binascii.unhexlify(bytes(r.salt))
+        h = hmac.new(salt, mail.encode('utf-8'), hashlib.sha256)
+        
+        is_unsubscribed = r.unsubscribed and not resubscribe
+        if mail == r.email:
+            sql = 'UPDATE skillbook_user SET email = %s, newsletter = %s, email_token = %s, \
+            unsubscribed = %s WHERE user_id = %s'
+        else:
+            sql = 'UPDATE skillbook_user SET email = %s, newsletter = %s, email_token = %s, \
+            unsubscribed = %s, valid_email = false WHERE user_id = %s'
+        
+        c.execute(sql, (mail, newsletter, h.hexdigest(), is_unsubscribed, user_id))
         conn.commit()
 
 
 def get_preferences(user_id):
     with _cursor(conn) as c:
-        r = query_one(c, 'SELECT email, valid_email, newsletter FROM skillbook_user WHERE user_id = %s', 
-                (user_id,))
+        r = query_one(c, 'SELECT email, valid_email, unsubscribed, newsletter \
+            FROM skillbook_user WHERE user_id = %s', (user_id,))
         return r
+
+
+def get_email_attributes(user_id):
+    with _cursor(conn) as c:
+        r = query_one(c, 'SELECT user_id, username, email, valid_email, email_token, unsubscribed \
+            FROM skillbook_user WHERE user_id = %s', (user_id,))
+        return r
+
+
+def confirm_email(user_id, token):
+    with _cursor(conn) as c:
+        c.execute('UPDATE skillbook_user SET valid_email = true WHERE user_id = %s AND email_token = %s', 
+                (user_id, token))
+        conn.commit()
+        return c.rowcount == 1
+
+
+def unsubscribe_email(user_id, token):
+    with _cursor(conn) as c:
+        c.execute('UPDATE skillbook_user SET unsubscribed = true WHERE user_id = %s AND email_token = %s', 
+                (user_id, token))
+        conn.commit()
+        return c.rowcount == 1
 
 
 def create_account(username, password):
@@ -113,7 +147,7 @@ def add_key(user, key_id, key_code, key_mask, characters):
         for char in characters:
             # Why two try blocks? Well, we can handle multiple characters on different keys
             try:
-                c.execute('INSERT INTO eve_character (character_id, name) VALUES (%s, %s)', 
+                c.execute('INSERT INTO character_sheet (character_id, name) VALUES (%s, %s)', 
                     (char.characterid, char.charactername))
             except psycopg2.IntegrityError:
                 conn.rollback()
@@ -158,7 +192,7 @@ def get_users():
 def get_characters(user_id):
     with _cursor(conn) as c:
         r = query(c, 'SELECT name, char.character_id, key_id, vcode, mask FROM api_key keys \
-            INNER JOIN eve_character char ON char.character_id = keys.character_id \
+            INNER JOIN character_sheet char ON char.character_id = keys.character_id \
             WHERE user_id = %s', (user_id,))
         return list(r)
 
@@ -166,14 +200,14 @@ def get_characters(user_id):
 def get_character_briefs(user_id):
     with _cursor(conn) as c:
         r = query(c, 'SELECT name, char.character_id, char.corporation_name, balance, training_end, training_flag FROM api_key keys \
-                INNER JOIN eve_character char ON char.character_id = keys.character_id WHERE user_id = %s ORDER BY name', (user_id,))
+                INNER JOIN character_sheet char ON char.character_id = keys.character_id WHERE user_id = %s ORDER BY name', (user_id,))
         return list(r)
 
 
 def get_keys(user_id):
     with _cursor(conn) as c:
         r = query(c, 'SELECT array_agg(char.character_id) as ids, array_agg(char.name) as names, key_id, mask \
-                FROM api_key keys INNER JOIN eve_character char ON char.character_id = keys.character_id \
+                FROM api_key keys INNER JOIN character_sheet char ON char.character_id = keys.character_id \
                 WHERE user_id = %s GROUP BY key_id, mask', (user_id,))
         return list(r)
 
@@ -194,7 +228,7 @@ def get_key(user_id, key_id):
 
 def save_character_info(character):
     with _cursor(conn) as c:
-        c.execute('UPDATE eve_character SET (corporation_id, corporation_name, \
+        c.execute('UPDATE character_sheet SET (corporation_id, corporation_name, \
                     alliance_id, alliance_name, security) = \
                     (%(corporationid)s, %(corporation)s, %(allianceid)s, \
                     %(alliance)s, %(securitystatus)s)\
@@ -204,7 +238,7 @@ def save_character_info(character):
 
 def save_character_sheet(character):
     with _cursor(conn) as c:
-        c.execute('UPDATE eve_character SET (corporation_id, corporation_name, bio, birthday, \
+        c.execute('UPDATE character_sheet SET (corporation_id, corporation_name, bio, birthday, \
                     clone_grade, clone_skillpoints, balance, intelligence_base, memory_base, willpower_base, \
                     perception_base, charisma_base, intelligence_bonus, memory_bonus, willpower_bonus, \
                     perception_bonus, charisma_bonus) = \
@@ -249,7 +283,7 @@ def save_character_sheet(character):
 
 def get_character_sheet(character_id):
     with _cursor(conn) as c:
-        r = query_one(c, 'SELECT c.*, sum(cs.skillpoints) skillpoints FROM eve_character c \
+        r = query_one(c, 'SELECT c.*, sum(cs.skillpoints) skillpoints FROM character_sheet c \
             INNER JOIN character_skill cs ON cs.character_id = c.character_id \
             WHERE c.character_id = %s GROUP BY c.character_id', (character_id,)) 
         return r
@@ -263,7 +297,7 @@ def get_character_skills(character_id):
                 c.willpower, c.perception, c.memory, c.intelligence, c.charisma\
                 FROM character_skill cs INNER JOIN skill s ON s.type_id = cs.type_id \
                 INNER JOIN inventory_group g on g.group_id = s.group_id \
-                INNER JOIN eve_character c on c.character_id = cs.character_id\
+                INNER JOIN character_sheet c on c.character_id = cs.character_id\
                 WHERE c.character_id = %s', (character_id,)) 
         return list(r)
 
@@ -285,10 +319,10 @@ def save_skill_queue(character_id, queue):
         if queue.rows:
             # Alert the user that the queue is paused
             if queue.rows[-1].endtime == '':
-                c.execute('UPDATE eve_character SET training_flag = %s WHERE character_id = %s', 
+                c.execute('UPDATE character_sheet SET training_flag = %s WHERE character_id = %s', 
                     ('QUEUE PAUSED', character_id,))
             else:
-                c.execute('UPDATE eve_character SET training_end = %s, training_flag = null WHERE character_id = %s', 
+                c.execute('UPDATE character_sheet SET training_end = %s, training_flag = null WHERE character_id = %s', 
                     (queue.rows[-1].endtime, character_id))
         conn.commit()
 
@@ -299,7 +333,7 @@ def get_skill_queue(character_id):
                 s.name, c.willpower, c.perception, c.memory, c.intelligence, c.charisma, \
                 s.primary_attribute, s.secondary_attribute \
                 FROM character_queue cq INNER JOIN skill s ON s.type_id = cq.type_id \
-                INNER JOIN eve_character c on c.character_id = cq.character_id\
+                INNER JOIN character_sheet c on c.character_id = cq.character_id\
                 WHERE c.character_id = %s ORDER BY queue_position', (character_id,))
         return list(r)
 
@@ -368,14 +402,14 @@ def get_plans(user_id, character_id = None):
                 (user_id, character_id))
         else:
             r = query(c, 'SELECT p.plan_id, p.name, p.description, p.character_id, c.name character_name FROM plan p \
-                INNER JOIN eve_character c ON c.character_id = p.character_id WHERE user_id = %s', (user_id,))
+                INNER JOIN character_sheet c ON c.character_id = p.character_id WHERE user_id = %s', (user_id,))
         return list(r)
 
 
 def get_plan(user_id, plan_id):
     with _cursor(conn) as c:
         r = query_one(c, 'SELECT p.plan_id, p.name, p.description, p.character_id, c.name character_name \
-            FROM plan p INNER JOIN eve_character c ON c.character_id = p.character_id \
+            FROM plan p INNER JOIN character_sheet c ON c.character_id = p.character_id \
             WHERE user_id = %s and plan_id = %s', (user_id, plan_id))
         return r
         

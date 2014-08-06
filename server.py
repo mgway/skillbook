@@ -5,10 +5,12 @@ import tornado.escape
 import tornado.web
 import os
 import simplejson 
+
 import db
 import api
 import config
 import eveapi
+import mail
 
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -129,7 +131,9 @@ class SettingsHandler(BaseHandler):
         if self.get_argument('email-form', default=None):
             mail = self.get_argument('email', default='')
             letter = self.get_argument('newsletter', default=False)
-            db.change_preferences(user_id, mail, letter)
+            resubscribe = self.get_argument('resubscribe', default=False) == 'on'
+            
+            db.change_preferences(user_id, mail, letter, resubscribe)
             messages['mail'] = 'Mail preferences updated'
 
         elif self.get_argument('password-form', default=None):
@@ -148,6 +152,47 @@ class SettingsHandler(BaseHandler):
         prefs = db.get_preferences(user_id)
         self.render('settings.html', prefs=prefs, **messages)
 
+
+class MailHandler(BaseHandler):
+    messages = {'title': '', 'message': ''}
+    
+    def get(self, action):
+        messages = self.messages.copy()
+        user_id = self.get_argument('u', default=None)
+        token = self.get_argument('t', default=None)
+        
+        if action == 'confirm':
+            messages['title'] = 'Email Confirmation'
+            if db.confirm_email(user_id, token):
+                messages['message'] = 'Address successfully confirmed. You may now receive elect \
+                to receive notifications about your character\'s status.'
+            else:
+                messages['message'] = 'Invalid token, address not confirmed'
+        if action == 'unsubscribe':
+            messages['title'] = 'Unsubscribe'
+            if db.unsubscribe_email(user_id, token):
+                messages['message'] = 'Unsubscribe successful. You may re-enable notification email \
+                at any time from the settings page'
+            else:
+                messages['message'] = 'Invalid token, address not unsubscribed'
+        else:
+            return self.set_status(400)
+        
+        self.render('mail.html', **messages)
+        
+    @tornado.web.authenticated
+    def post(self, action):
+        user_id = self.get_current_user()
+        
+        if action == 'confirm':
+            user = db.get_email_attributes(user_id)
+            if not user.valid_email:
+                mail.send_confirmation(user)
+                return self.set_status(200)
+            else:
+                return self.set_status(304)
+        else:
+            return self.set_status(400)
 
 # API Methods
 class KeyApiHandler(AjaxHandler):
@@ -293,6 +338,7 @@ if __name__ == "__main__":
             (r'/register', RegistrationHandler),
             (r'/skills.*', SkillsHandler),
             (r'/plans.*', PlansHandler),
+            (r'/mail/(?P<action>[\w]+)/?', MailHandler),
             (r'/api/static/(.+)', StaticApiHandler),
             (r'/api/plan/(?P<plan_id>[\d]+)?/?(?P<entry_id>[\d]+)?/?', PlanApiHandler),
             (r'/api/character/(?P<character_id>[\d]+)?/?(?P<subtype>[\w]+)?/?', CharacterApiHandler),

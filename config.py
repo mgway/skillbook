@@ -12,7 +12,8 @@ class WebConfig(Config):
         ('port', 8888),
         ('host', 'localhost'),
         ('cookie_secret', 'You should probably change this'),
-        ('debug', True)
+        ('debug', True),
+        ('https', False)
     ])
 
 class DBConfig(Config):
@@ -34,6 +35,14 @@ class RedisConfig(Config):
         ('db', 0)
     ])
 
+class MailgunConfig(Config):
+    key = 'mailgun'
+    attrs = dict([
+        ('key', 'key-1234567'),
+        ('url', 'domain.com'),
+        ('from_address', 'noreply@domain.com')
+    ])
+
 try:
     conf = yaml.load(open('config.yaml', 'r'))
 except FileNotFoundError:
@@ -42,3 +51,4 @@ except FileNotFoundError:
 web = WebConfig(conf)
 db = DBConfig(conf)
 redis = RedisConfig(conf)
+mail = MailgunConfig(conf)
