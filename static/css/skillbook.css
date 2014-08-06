@@ -58,7 +58,7 @@ html {
 	padding-bottom:30px;
 }
 
-#character_skills {
+#character-skills {
 	line-height: 15px;
 }
 
@@ -139,7 +139,7 @@ dl {
 	top: 25px;
 	line-height: 1.5em;
 	padding: 8px 10px;
-	background-color: #f5f5f5;
+	background-color: #fafafa;
 	border: 1px solid rgba(0, 0, 0, 0.06);
 	color: #333;
 	z-index: 1;

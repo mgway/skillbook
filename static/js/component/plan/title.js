@@ -9,7 +9,7 @@ define(
         function planTitle() {
             
             this.defaultAttrs({
-                clickSelector: 'a',
+                clickSelector: '#pagetitle a',
             });
             
             this.updateTitleForList = function(e, data) {

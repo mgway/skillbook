@@ -14,9 +14,9 @@ define(
                 el.text(now.preciseDiff(expiration));
                 
                 if (expiration - now < 86400000) {
-                    el.addClass('error');
+                    el.addClass('uk-text-danger');
                 } else {
-                    el.removeClass('error');
+                    el.removeClass('uk-text-danger');
                 }
             });
         };

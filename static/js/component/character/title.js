@@ -9,7 +9,7 @@ define(
         function characterTitle() {
             
             this.defaultAttrs({
-                clickSelector: 'a',
+                clickSelector: '#pagetitle a',
             });
             
             this.updateTitleForList = function(e, data) {

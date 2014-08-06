@@ -1,11 +1,12 @@
 define(
     [
-        'component/character_title',
-        'component/character_list',
-        'component/character_detail',
-        'component/character_queue',
-        'component/character_skills',
-        'component/character_refresh',
+        'component/character/title',
+        'component/character/list',
+        'component/character/detail',
+        'component/character/queue',
+        'component/character/skills',
+        'component/character/subnav',
+        'component/character/refresh',
         'data/characters',
         'schedule',
         'history',
@@ -13,7 +14,7 @@ define(
     ],
     
     function(CharacterTitle, CharacterList, CharacterDetail, CharacterQueue, 
-                CharacterSkills, CharacterRefresh, CharacterStore, Schedule, 
+                CharacterSkills, CharacterSubnav, CharacterRefresh, CharacterStore, Schedule, 
                 History, countdown) {
 
         function initialize() {
@@ -21,10 +22,11 @@ define(
             CharacterRefresh.attachTo(document);
             
             CharacterTitle.attachTo("#pagetitle");
-            CharacterDetail.attachTo("#character_detail");
-            CharacterQueue.attachTo("#character_queue");
-            CharacterSkills.attachTo("#character_skills");
-            CharacterList.attachTo("#character_list");
+            CharacterDetail.attachTo("#character-detail");
+            CharacterQueue.attachTo("#character-queue");
+            CharacterSkills.attachTo("#character-skills");
+            CharacterSubnav.attachTo("#character-subnav");
+            CharacterList.attachTo("#character-list");
             
             Schedule.attachTo(document, {tickInterval: 10});
             History.attachTo(window, {

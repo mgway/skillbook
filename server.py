@@ -160,7 +160,6 @@ class MailHandler(BaseHandler):
         messages = self.messages.copy()
         user_id = self.get_argument('u', default=None)
         token = self.get_argument('t', default=None)
-        
         if action == 'confirm':
             messages['title'] = 'Email Confirmation'
             if db.confirm_email(user_id, token):
@@ -168,7 +167,7 @@ class MailHandler(BaseHandler):
                 to receive notifications about your character\'s status.'
             else:
                 messages['message'] = 'Invalid token, address not confirmed'
-        if action == 'unsubscribe':
+        elif action == 'unsubscribe':
             messages['title'] = 'Unsubscribe'
             if db.unsubscribe_email(user_id, token):
                 messages['message'] = 'Unsubscribe successful. You may re-enable notification email \

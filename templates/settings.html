@@ -16,7 +16,7 @@
 								value="{{prefs.email}}" class="uk-width-2-3"/>
 							<small>
 								{% if prefs.valid_email %}
-									<i class="fa fa-check"></i> confirmed
+									<i class="fa fa-check uk-text-success"></i> confirmed
 								{% else %}
 									<a class="phony" id="confirmation">click to confirm</a>
 								{% end %}
@@ -86,12 +86,17 @@
 		}
 		$('#confirmation').on('click', function(){
 			var that = $(this);
+			if(that.data('sent')){
+				return;
+			}
+			
 			$.ajax({
 				type: 'POST',
 				headers: {'X-Xsrftoken': getCookie('_xsrf')},
 				url: '/mail/confirm',
 				success: function() {
 					that.html('<i class="fa fa-envelope"></i> mail sent');
+					that.data('sent', true);
 				}
 			});
 		});

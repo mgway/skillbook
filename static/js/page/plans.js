@@ -1,7 +1,7 @@
 define(
     [
-        'component/plan_title',
-        'component/plan_list',
+        'component/plan/title',
+        'component/plan/list',
         'data/plans',
         'schedule',
         'history',
