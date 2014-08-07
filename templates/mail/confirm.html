@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+    Thanks for registering with skillbook. In order to receive notifications from us, 
+    you must first confirm your email address by clicking on the following link:<br />
+    <a href="http{% if config.https %}s{% end %}://{{ config.host }}/mail/confirm?u={{user.user_id}}&t={{ user.email_token }}">Click Here</a><br />
+    <br />
+    If you did not sign up for this service, then you may safely ignore this email.<br />
+    <br />
+{% end %}
