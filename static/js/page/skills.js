@@ -6,6 +6,7 @@ define(
         'component/character/queue',
         'component/character/skills',
         'component/character/subnav',
+        'component/character/alert',
         'component/character/refresh',
         'data/characters',
         'schedule',
@@ -14,7 +15,7 @@ define(
     ],
     
     function(CharacterTitle, CharacterList, CharacterDetail, CharacterQueue, 
-                CharacterSkills, CharacterSubnav, CharacterRefresh, CharacterStore, Schedule, 
+                CharacterSkills, CharacterSubnav, CharacterAlert, CharacterRefresh, CharacterStore, Schedule, 
                 History, countdown) {
 
         function initialize() {
@@ -24,7 +25,8 @@ define(
             CharacterTitle.attachTo("#pagetitle");
             CharacterDetail.attachTo("#character-detail");
             CharacterQueue.attachTo("#character-queue");
-            CharacterSkills.attachTo("#character-skills");
+            CharacterAlert.attachTo("#character-flex");
+            CharacterSkills.attachTo("#character-flex");
             CharacterSubnav.attachTo("#character-subnav");
             CharacterList.attachTo("#character-list");
             

@@ -113,6 +113,23 @@ def get_character_plans(user_id, character_id):
     else:
         raise SkillbookException('You do not have permission to view this character')
 
+
+@cached('character-alerts', arg_pos=1)
+def get_character_alerts(user_id, character_id):
+    if db.get_character(user_id, character_id) != None:
+        mail_attributes = db.get_email_attributes(user_id)
+        alerts = db.get_character_alerts(user_id, character_id)
+        return {'alerts': alerts, 'unsubscribed': mail_attributes.unsubscribed, 
+            'valid_email': mail_attributes.valid_email}
+    else:
+        raise SkillbookException('You do not have permission to view this character')
+
+
+@bust('character-alerts', arg_pos=1)
+def set_character_alerts(user_id, character_id, alerts):
+    db.set_character_alerts(user_id, character_id, alerts)
+
+
 # Plans
 @cached('plans', arg_pos=0)
 def get_plans(user_id):
@@ -143,6 +160,11 @@ def get_all_skills():
     for skill in db_skills:
         skills_dict[skill['type_id']] = skill
     return skills_dict
+
+
+@cached('static:alerts')
+def get_all_alerts():
+    return db.get_alerts()
 
 
 class SkillbookException(Exception):

@@ -1,0 +1,32 @@
+{{#unless valid_email}}
+<div class="uk-alert">You will not receive any alerts until you confirm your email address via the <a href="/settings">accout settings page</a>.</div>
+{{/unless}}
+{{#if unsubscribed}}
+<div class="uk-alert">You will not receive any alerts until you un-unsubscribe from all emails on the <a href="/settings">accout settings page</a>.</div>
+{{/if}}
+{{#if updated}}
+<div class="uk-alert uk-alert-success">Alerts successfully updated</div>
+{{/if}}
+<table class="uk-table uk-table-striped uk-table-condensed">
+    <thead>
+        <th>Enabled</th>
+        <th>Parameter</th>
+        <th>Units</th>
+        <th>Name/Description</th>
+    </thead>
+    <tbody>
+        {{#alerts}}
+        <tr data-type="{{alert_type_id}}">
+            <td><form class="uk-form"><label><input type="checkbox" {{#if enabled }}checked{{/if}}></input> Enabled</label></form></td>
+            <td><form class="uk-form">
+                    <input type="number" value="{{#if option_1_value}}{{option_1_value}}{{else}}{{option_1_default}}{{/if}}" 
+                    data-default="{{option_1_default}}" min="{{option_1_min}}" max="{{option_1_max}}" class="uk-form-width-small uk-form-small"></input>
+                </form>
+            </td>
+            <td>{{option_1_unit}}</td>
+            <td><strong>{{name}}</strong><br />{{description}}</td>
+        </tr>
+        {{/alerts}}
+    </tbody>
+</table>
+<button class="uk-button uk-button-primary" id="alert-save" type="button">save</button>

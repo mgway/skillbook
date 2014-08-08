@@ -136,7 +136,7 @@ def create_account(username, password):
     with _cursor(conn) as c:
         c.execute('INSERT INTO skillbook_user (user_id, username, password, salt, created) \
                 VALUES (DEFAULT, %s, %s, %s, CURRENT_TIMESTAMP)', (username, hashed, salt))
-        r = query_one(c, "SELECT CURRVAL('users_id_seq')", None)
+        r = query_one(c, "SELECT CURRVAL('user_userid_seq')", None)
         conn.commit()
     return r.currval
 
@@ -302,6 +302,29 @@ def get_character_skills(character_id):
         return list(r)
 
 
+def get_character_alerts(user_id, character_id):
+    with _cursor(conn) as c:
+        r = query(c, 'select user_id, character_id, types.alert_type_id, name, description, interval, \
+                option_1_default, option_1_min, option_1_max, option_1_unit, option_1_value, \
+                option_2_default, option_2_min, option_2_max, option_2_value, option_2_unit, \
+                last_time, enabled from character_alert ca right outer join alert_type types \
+                on types.alert_type_id = ca.alert_type_id where user_id = %s or user_id is null \
+                and character_id = %s or character_id is null order by types.alert_type_id', 
+                (user_id, character_id)) 
+        return list(r)
+
+
+def set_character_alerts(user_id, character_id, alerts):
+    with _cursor(conn) as c:
+        c.execute('DELETE FROM character_alert WHERE user_id = %s AND character_id = %s', (user_id, character_id))
+        
+        for alert in alerts:
+            c.execute('INSERT INTO character_alert (user_id, character_id, alert_type_id, option_1_value, enabled) \
+                VALUES (%s, %s, %s, %s, %s)', (user_id, character_id, alert['alert_type_id'], 
+                alert['option_1_value'], alert['enabled']))
+        conn.commit()
+
+
 def save_skill_queue(character_id, queue):
     with _cursor(conn) as c:
         # Remove current training information
@@ -383,6 +406,12 @@ def get_api_calls(required_only=False):
         if required_only:
             sql += ' WHERE is_required = TRUE'
         r = query(c, sql, ())
+        return list(r)
+
+
+def get_alerts():
+    with _cursor(conn) as c:
+        r = query(c, 'SELECT * FROM alert_type', ())
         return list(r)
 
 

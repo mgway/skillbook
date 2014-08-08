@@ -255,6 +255,9 @@ class CharacterApiHandler(AjaxHandler):
             elif subtype == 'queue':
                 skills = api.get_character_queue(user_id, character_id)
                 self.write_message(skills)
+            elif subtype == 'alerts':
+                skills = api.get_character_alerts(user_id, character_id)
+                self.write_message(skills)
             elif character_id and subtype == None:
                 sheet = api.get_character_sheet(user_id, character_id)
                 self.write_message(sheet)
@@ -266,7 +269,22 @@ class CharacterApiHandler(AjaxHandler):
             self.set_status(403)
             self.write_message({'error': e.message}, pre=False)
 
+    def post(self, character_id = None, subtype = None):
+        user_id = self.get_current_user()
+        try:
+            if subtype == 'alerts':
+                try:
+                    alerts = simplejson.loads(self.request.body)
+                except (simplejson.JSONDecodeError):
+                    return self.set_status(400)
+                    
+                api.set_character_alerts(user_id, character_id, alerts)
+                self.write_message(api.get_character_alerts(user_id, character_id))
 
+        except api.SkillbookException as e:
+            self.set_status(403)
+            self.write_message({'error': e.message}, pre=False)
+        
 class PlanApiHandler(AjaxHandler):
     @tornado.web.authenticated
     def get(self, plan_id = None, entry_id = None):

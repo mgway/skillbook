@@ -58,7 +58,7 @@ html {
 	padding-bottom:30px;
 }
 
-#character-skills {
+table.skills {
 	line-height: 15px;
 }
 

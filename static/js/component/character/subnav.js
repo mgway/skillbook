@@ -20,15 +20,22 @@ define(
                 this.$node.empty();
             };
             
-            this.requestPage = function(e, data) {
-                alert('soon (tm)');
+            this.switchPage = function(e, data) {
+                var el = $(data.el);
+                var parentUl = el.parent().parent();
+                var characterId = parentUl.data('character');
+                var id = el.attr('id').split('_')[1];
+                
+                parentUl.children().removeClass('uk-active');
+                el.parent().addClass('uk-active');
+                this.trigger(document, 'uiSwitchCharacterTab', {page: id, id: characterId});
             };
            
             this.after('initialize', function() {
                 this.on(document, 'uiCharacterRequest', this.render);
                 this.on(document, 'uiCharactersRequest', this.hide);
                 
-                this.on('click', { 'clickSelector': this.requestPage });
+                this.on('click', { 'clickSelector': this.switchPage });
             });
        }
    }

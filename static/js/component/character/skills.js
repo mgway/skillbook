@@ -8,18 +8,19 @@ define(
         
         function characterSkills() {
 
-            var lastRefreshTime;
+            var lastRefreshTime, 
+                isVisible = true;
             
             this.defaultAttrs({
-                clickSelector: 'thead',
+                clickSelector: '.collapsable',
             });
             
             this.render = function(e, data) {
-                // Don't constantly re-render
-                if(lastRefreshTime != data.refreshTime || this.$node.html() === "") {
-                    lastRefreshTime = data.refreshTime;
-                    this.$node.html(template(data));
-                }
+                if(!isVisible)
+                    return;
+                
+                // Find a way to reduce the number of renders
+                this.$node.html(template(data));
             };
             
             this.hide = function(e, data) {
@@ -28,6 +29,15 @@ define(
             
             this.hideGroup = function(e) {
                 $(e.target).parents('table').find('tbody').toggle();
+            };
+            
+            this.switchTab = function(e, data) {
+                if(data.page == 'skills') {
+                    isVisible = true;
+                    this.trigger(document, 'uiCharacterRefresh', data);
+                } else {
+                    isVisible = false;
+                }
             };
             
             this.setTraining = function(e, data) {
@@ -51,7 +61,8 @@ define(
                 this.on(document, 'dataCharacterSkillsResponse', this.render);
                 this.on(document, 'uiCharactersRequest', this.hide);
                 this.on(document, 'uiSetSkillInTraining', this.setTraining);
-
+                this.on(document, 'uiSwitchCharacterTab', this.switchTab);
+                
                 this.on(document, 'click', { 'clickSelector': this.hideGroup });
             });
        }

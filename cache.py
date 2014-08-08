@@ -57,12 +57,15 @@ def fetch(key, result='json'):
             return data # 'native'
 
 
-# Remove the key in any format
+# Remove the key
 def remove(key, all_formats=True):
-    key = '*:' + key if all_formats else key 
-    r.delete(r.keys(key))
+    multi_key = '*:' + key if all_formats else key 
+    for key in r.keys(multi_key):
+        r.delete(key)
 
 
+# Decorator for automatically caching the result of a function. The cache key is
+# of the form: 'method:key:arg_or_kwarg_value
 def cached(key, arg_pos=None, kwarg_name=None, method='json', expires=900):
     def wrap(fn, *args, **kwargs):
         def wrapped_fn(*args, **kwargs):
@@ -83,7 +86,7 @@ def cached(key, arg_pos=None, kwarg_name=None, method='json', expires=900):
         return wrapped_fn
     return wrap
 
-
+# Decorator for automatically removing a cached element. 
 def bust(key, arg_pos=None, kwarg_name=None, all_formats=True):
     def wrap(fn, *args, **kwargs):
         def wrapped_fn(*args, **kwargs):
@@ -95,12 +98,10 @@ def bust(key, arg_pos=None, kwarg_name=None, all_formats=True):
                 full_key = '%s:%s' % (key, args[arg_pos])
             elif kwarg_name != None:
                 full_key = '%s:%s' % (key, kwargs[kwarg_name])
-                
-            full_key = '*:' + full_key if all_formats else full_key
-                
+            
             data = fn(*args, **kwargs)
-            r.delete(r.keys(full_key))
-
+            remove(full_key, all_formats)
+            
             return data
         return wrapped_fn
     return wrap

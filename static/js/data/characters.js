@@ -176,16 +176,69 @@ define(
                 
                 this.trigger(document, 'dataCharacterQueueResponse', toSave);
             };
+            
+            this.fetchAlerts = function(e, data) {
+                var alerts = JSON.parse(localStorage.getItem('alerts_'+data.id));
+                if (alerts === null || moment() - moment(alerts.refreshTime) > this.attr.interval) {
+                    this.get({
+                        xhr: {
+                            url: '/api/character/' + data.id + "/alerts"
+                        },
+                        events: {
+                            done: 'apiCharacterAlertListResponse'
+                        },
+                        meta: {
+                            key: 'data',
+                            characterId: data.id
+                        }
+                    });
+                } else {
+                    this.trigger(document, 'dataCharacterAlertListResponse', alerts);
+                }
+            };
+            
+            this.saveAlerts = function(e, data) {
+                data.data.refreshTime = moment();
+                localStorage.setItem('alerts_'+data.meta.characterId, JSON.stringify(data.data));
+                
+                // Add updated flag to display the success message
+                if(data.meta.updated){
+                    data.data.updated = true;
+                }
+                this.trigger(document, 'dataCharacterAlertListResponse', data.data);
+            };
+            
+            this.updateAlerts = function(e, data) {
+                localStorage.removeItem('alerts_'+data.id);
+                
+                this.post({
+                    xhr: {
+                        url: '/api/character/' + data.id + "/alerts",
+                        data: JSON.stringify(data.alerts)
+                    },
+                    events: {
+                        done: 'apiCharacterAlertListResponse'
+                    },
+                    meta: {
+                        key: 'data',
+                        characterId: data.id,
+                        updated: true
+                    }
+                });
+            };
 
             this.after('initialize', function () {
                 this.on(document, 'uiCharactersRequest', this.fetchCharacters);
                 this.on(document, 'uiCharacterRequest', this.fetchCharacter);
                 this.on(document, 'uiCharacterRefresh', this.fetchCharacter);
-                
+                this.on(document, 'uiNeedsAlertList', this.fetchAlerts);
+                this.on(document, 'uiSaveAlertList', this.updateAlerts);
+
                 this.on('dataCharactersResponse', this.saveCharacters);
                 this.on('apiCharacterDetailResponse', this.saveSheet);
                 this.on('apiCharacterQueueResponse', this.saveQueue);
                 this.on('apiCharacterSkillsResponse', this.saveSkills);
+                this.on('apiCharacterAlertListResponse', this.saveAlerts);
             });
         }
     }
