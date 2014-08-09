@@ -5,6 +5,7 @@ import tornado.escape
 import tornado.web
 import os
 import simplejson 
+import traceback
 
 import db
 import api
@@ -226,6 +227,7 @@ class KeyApiHandler(AjaxHandler):
             self.set_status(400)
             self.write_message({'error': e.message}, pre=False)
         except Exception as e:
+            traceback.print_exc()
             self.set_status(500)
             self.write_message({'error': 'An unknown error has occurred'}, pre=False)
         

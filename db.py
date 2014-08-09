@@ -2,9 +2,9 @@ import binascii
 import hashlib
 import hmac
 import io
-import json
 import psycopg2
 import os
+from psycopg2.tz import FixedOffsetTimezone
 from collections import defaultdict
 
 import config
@@ -141,7 +141,7 @@ def create_account(username, password):
     return r.currval
 
 
-def add_key(user, key_id, key_code, key_mask, characters):
+def add_key(user_id, key_id, key_code, key_mask, key_expires, characters):
     with _cursor(conn) as c:
         # Add all characters in this key
         for char in characters:
@@ -153,12 +153,17 @@ def add_key(user, key_id, key_code, key_mask, characters):
                 conn.rollback()
             # But want to disallow users from adding the same key twice
             try:
-                c.execute('INSERT INTO api_key (user_id, key_id, vcode, mask, character_id) VALUES \
-                        (%s, %s, %s, %s, %s)', (user, key_id, key_code, key_mask, char.characterid))
+                c.execute('INSERT INTO api_key (user_id, key_id, vcode, mask, key_expires, character_id) \
+                    VALUES  (%s, %s, %s, %s, %s, %s)', 
+                    (user_id, key_id, key_code, key_mask, key_expires, char.characterid))
             except psycopg2.IntegrityError:
                 conn.rollback()
                 raise UserError('This key has already been added to your account')
             conn.commit()
+
+
+def update_key(key_id, key_code, mask, key_expires):
+    pass
 
 
 def add_grants(key_id, grants, characters):
@@ -234,7 +239,7 @@ def save_character_info(character):
                     %(alliance)s, %(securitystatus)s)\
                     where character_id = %(characterid)s', character.__dict__)
         conn.commit()
-        
+
 
 def save_character_sheet(character):
     with _cursor(conn) as c:
@@ -257,7 +262,7 @@ def save_character_sheet(character):
         for skill in character.skills.rows:
             skills[skill.typeid] = {'level': skill.level, 'skillpoints': skill.skillpoints, 
                     'type_id': skill.typeid, 'character_id': character.characterid}
-
+        
         # We need a new cursor because adding updates to cursor c's transaction during iteration 
         # breaks its internal state
         with _cursor(conn) as u:
@@ -272,12 +277,12 @@ def save_character_sheet(character):
                             WHERE character_id = %(character_id)s AND type_id = %(type_id)s', skills[typeid])
                 # Remove the skill from our list since we've handled the update
                 del(skills[typeid])
-
+            
             # Our set of skills from the api now contains only skills that are new
             for skill in skills.values():
                 u.execute('INSERT INTO character_skill (character_id, type_id, level, skillpoints, updated) VALUES \
                         (%(character_id)s, %(type_id)s, %(level)s, %(skillpoints)s, CURRENT_TIMESTAMP)', skill)
-
+            
             conn.commit()
 
 
@@ -307,7 +312,7 @@ def get_character_alerts(user_id, character_id):
         r = query(c, 'select user_id, character_id, types.alert_type_id, name, description, interval, \
                 option_1_default, option_1_min, option_1_max, option_1_unit, option_1_value, \
                 option_2_default, option_2_min, option_2_max, option_2_value, option_2_unit, \
-                last_time, enabled from character_alert ca right outer join alert_type types \
+                on_cooldown_until, enabled from character_alert ca right outer join alert_type types \
                 on types.alert_type_id = ca.alert_type_id where user_id = %s or user_id is null \
                 and character_id = %s or character_id is null order by types.alert_type_id', 
                 (user_id, character_id)) 
@@ -361,6 +366,8 @@ def get_skill_queue(character_id):
         return list(r)
 
 
+# -- async task support
+
 # Get all updates for one particular key. Used for pulling in character information for a newly added key
 def get_update_for_key(key_id):
     with _cursor(conn) as c:
@@ -381,13 +388,43 @@ def get_update_list():
         return list(r)
 
 
-# Now that we've performed all the API calls specified by get_update_list, 
-# save the metadata about the calls
+# Save the status for one api call
+def save_update_status(update):
+    update['cached_until'] = update['cached_until'].replace(tzinfo=FixedOffsetTimezone(0))
+    with _cursor(conn) as c:
+        c.execute('UPDATE character_api_status SET (cached_until, response_code, is_ignored) = \
+                (%(cached_until)s, %(response_code)s, %(ignored)s) WHERE \
+                character_id = %(character_id)s AND key_id = %(key_id)s AND api_method = %(api_method)s', update)
+        conn.commit()
+
+
+# Save the status for many api calls
+# Todo: Remove
 def save_update_list(updates):
     with _cursor(conn) as c:
         c.executemany('UPDATE character_api_status SET (cached_until, response_code, is_ignored) = \
                 (%(cached_until)s, %(response_code)s, %(ignored)s) WHERE \
                 character_id = %(character_id)s AND key_id = %(key_id)s AND api_method = %(api_method)s', updates)
+        conn.commit()
+
+
+def get_alert(alert_code, character_id):
+    with _cursor(conn) as c:
+        r = query(c, 'SELECT ca.*, cs.name character_name, t.name, email_description, interval \
+            FROM character_alert ca \
+            INNER JOIN alert_type t ON t.alert_type_id = ca.alert_type_id \
+            INNER JOIN character_sheet cs on ca.character_id = cs.character_id \
+            WHERE ca.character_id = %s AND enabled = true AND alert_code = %s \
+            AND (on_cooldown_until < CURRENT_TIMESTAMP OR on_cooldown_until IS NULL)', 
+            (character_id, alert_code), as_row_obj=True)
+        return list(r)
+
+
+def update_alert(alert_type_id, user_id, character_id, on_cooldown_until):
+    with _cursor(conn) as c:
+        c.execute('UPDATE character_alert SET on_cooldown_until = %s WHERE alert_type_id = %s \
+            AND character_id = %s AND user_id = %s', 
+            (on_cooldown_until, alert_type_id, character_id, user_id))
         conn.commit()
 
 
@@ -405,13 +442,7 @@ def get_api_calls(required_only=False):
         sql = 'SELECT * FROM api_call'
         if required_only:
             sql += ' WHERE is_required = TRUE'
-        r = query(c, sql, ())
-        return list(r)
-
-
-def get_alerts():
-    with _cursor(conn) as c:
-        r = query(c, 'SELECT * FROM alert_type', ())
+        r = query(c, sql, (), as_row_obj=True)
         return list(r)
 
 

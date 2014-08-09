@@ -1,53 +1,9 @@
 import db
 import eveapi
 import cache
-import datetime
+import tasks
 from cache import cached, bust
-from psycopg2.tz import FixedOffsetTimezone
-import traceback
 
-def perform_updates(key_id=None):
-    if key_id:
-        updates = db.get_update_for_key(key_id)
-    else:
-        updates = db.get_update_list()
-    results = []
-    for row in updates:
-        try:
-            result = row.raw
-            if row.api_method == 'CharacterSheet':
-                data = eveapi.character_sheet(row.key_id, row.vcode, row.mask, row.character_id)
-                # Fudge the cached_until timer because it always returns ~30 seconds, and we
-                # don't care to update that often
-                data.cached_until = data.cached_until + datetime.timedelta(minutes=30)
-                db.save_character_sheet(data)
-                cache.remove("character-sheet:%s" % row.character_id)
-                cache.remove("character-skills:%s" % row.character_id)
-            elif row.api_method == 'SkillQueue':
-                data = eveapi.skill_queue(row.key_id, row.vcode, row.mask, row.character_id)
-                db.save_skill_queue(row.character_id, data.skillqueue)
-                cache.remove("character-queue:%s" % row.character_id)
-            elif row.api_method == 'CharacterInfo':
-                data = eveapi.character_info(row.character_id)
-                db.save_character_info(data)
-                cache.remove("character-sheet:%s" % row.character_id)
-            else:
-                raise SkillbookException('Unknown API method %s' % row.api_method)
-
-            # Fix the timezone, they give us UTC which might not be the TZ of the server
-            result.update({'cached_until': data.cached_until.replace(tzinfo=FixedOffsetTimezone(0)), 
-                'response_code': 200, 'response_error': '', 'ignored': False})
-            results.append(result)
-        except Exception as e:
-            traceback.print_exc()
-            # Ignore this call in the future if we've gotten an error before
-            ignored = True if row.response_code == 500 else False
-
-            result.update({'cached_until': None, 'response_code': 500, 
-                'response_error': repr(e), 'ignored': ignored})
-            results.append(result)
-
-    db.save_update_list(results)
 
 # API key management
 def get_keys(user_id):
@@ -61,7 +17,7 @@ def remove_key(user_id, key_id):
 
 @bust('characters', arg_pos=0)
 def add_key(user_id, key_id, vcode):
-    mask, characters = eveapi.key_info(key_id, vcode)
+    mask, characters, expires = eveapi.key_info(key_id, vcode)
 
     # Make sure the key has the minimum amount access
     requirements = db.get_api_calls()
@@ -72,9 +28,9 @@ def add_key(user_id, key_id, vcode):
         else:
             grants.append({'name': req.name, 'ignored': not req.is_required})
 
-    db.add_key(user_id, key_id, vcode, mask, characters.key.characters.rows)
+    db.add_key(user_id, key_id, vcode, mask, expires, characters.key.characters.rows)
     db.add_grants(key_id, grants, characters.key.characters.rows)
-    perform_updates(key_id=key_id)
+    tasks.perform_updates.delay(key_id=key_id)
 
 # Character/skills
 @cached('characters', arg_pos=0, expires=30)
@@ -127,7 +83,10 @@ def get_character_alerts(user_id, character_id):
 
 @bust('character-alerts', arg_pos=1)
 def set_character_alerts(user_id, character_id, alerts):
-    db.set_character_alerts(user_id, character_id, alerts)
+    if db.get_character(user_id, character_id) != None:
+        db.set_character_alerts(user_id, character_id, alerts)
+    else:
+        raise SkillbookException('You do not have permission to modify this character')
 
 
 # Plans

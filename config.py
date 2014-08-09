@@ -26,7 +26,6 @@ class DBConfig(Config):
         ('database', 'eveskill'),
     ])
 
-
 class RedisConfig(Config):
     key = 'redis'
     attrs = dict([
@@ -39,8 +38,15 @@ class MailgunConfig(Config):
     key = 'mailgun'
     attrs = dict([
         ('key', 'key-1234567'),
-        ('url', 'domain.com'),
+        ('url', 'example.com'),
         ('from_address', 'noreply@domain.com')
+    ])
+
+class CeleryConfig(Config):
+    key = 'celery'
+    attrs = dict([
+        ('broker_url', 'redis://localhost:6379/1'),
+        ('backend_url', 'redis://localhost:6379/1')
     ])
 
 try:
@@ -52,3 +58,4 @@ web = WebConfig(conf)
 db = DBConfig(conf)
 redis = RedisConfig(conf)
 mail = MailgunConfig(conf)
+celery = CeleryConfig(conf)

@@ -1,0 +1,9 @@
+Greetings {{ user.username }}, 
+
+    An alert was triggered for your character, {{alert.character_name}}. {{alert.email_description}}
+
+    This alert will be on cooldown for the next {{alert.interval}}.
+
+
+Cheers,
+- skillbook bot

@@ -9,8 +9,14 @@ api_url = 'https://api.eveonline.com'
 def key_info(key_id, key_code):
     data = {'keyID': key_id, 'vCode': key_code}
     query = Query('/account/APIKeyInfo.xml.aspx', data)
-    mask = query.tree.find('*//key').attrib['accessMask']
-    return mask, query
+    key = query.tree.find('*//key')
+    mask = key.attrib['accessMask']
+    print(key)
+    if key.attrib['expires'] != '':
+        expires = datetime.strptime(key.attrib['expires'], '%Y-%m-%d %H:%M:%S')
+    else:
+        expires = None
+    return mask, query, expires
 
 
 def character_sheet(key_id, key_code, key_mask, character_id):
@@ -55,7 +61,14 @@ def character_sheet(key_id, key_code, key_mask, character_id):
 def character_info(character_id):
     data = {'characterID': character_id}
     query = Query('/eve/CharacterInfo.xml.aspx', data)
-    print(query.__dict__)
+    
+    # No alliance? No problem! just drop part of the schema from the response
+    try:
+        query.allianceid
+    except AttributeError:
+        query.allianceid = None
+        query.alliance = None
+        
     return query
 
 

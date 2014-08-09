@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+    An alert was triggered for your character, {{alert.character_name}}, because
+    {{alert.email_description}}<br />
+    <br />
+    This alert will be on cooldown for the next {{alert.interval}}.<br />
+    <br />
+{% end %}

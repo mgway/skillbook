@@ -1,4 +1,4 @@
-Hi {{ user.username }}, 
+Greetings {{ user.username }}, 
 
 Thanks for registering with skillbook. In order to receive notifications from us, 
 you must first confirm your email address by clicking on the following link:
