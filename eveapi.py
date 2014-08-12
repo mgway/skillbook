@@ -11,7 +11,6 @@ def key_info(key_id, key_code):
     query = Query('/account/APIKeyInfo.xml.aspx', data)
     key = query.tree.find('*//key')
     mask = key.attrib['accessMask']
-    print(key)
     if key.attrib['expires'] != '':
         expires = datetime.strptime(key.attrib['expires'], '%Y-%m-%d %H:%M:%S')
     else:

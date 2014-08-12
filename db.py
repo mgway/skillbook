@@ -309,14 +309,23 @@ def get_character_skills(character_id):
 
 def get_character_alerts(user_id, character_id):
     with _cursor(conn) as c:
-        r = query(c, 'select user_id, character_id, types.alert_type_id, name, description, interval, \
-                option_1_default, option_1_min, option_1_max, option_1_unit, option_1_value, \
-                option_2_default, option_2_min, option_2_max, option_2_value, option_2_unit, \
-                on_cooldown_until, enabled from character_alert ca right outer join alert_type types \
-                on types.alert_type_id = ca.alert_type_id where user_id = %s or user_id is null \
-                and character_id = %s or character_id is null order by types.alert_type_id', 
-                (user_id, character_id)) 
-        return list(r)
+        r = query(c, 'SELECT alert_type_id, name, description, interval, option_1_default, \
+                option_1_min, option_1_max, option_1_unit, option_2_default, option_2_min, \
+                option_2_max, option_2_unit FROM alert_type', ())
+        
+        c = query(c, 'select user_id, character_id, alert_type_id, option_1_value, option_2_value, \
+                on_cooldown_until, enabled from character_alert where user_id = %s and character_id = %s',
+                (user_id, character_id))
+        
+        # I'm not good at this sql thing, so we'll manually join the lists
+        alerts = []
+        crs = list(c)
+        for al_row in list(r):
+            for char_row in crs:
+                if al_row['alert_type_id'] == char_row['alert_type_id']:
+                    al_row.update(char_row)
+            alerts.append(al_row)
+        return alerts
 
 
 def set_character_alerts(user_id, character_id, alerts):

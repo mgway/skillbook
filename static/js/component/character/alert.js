@@ -17,7 +17,8 @@ define(
             });
             
             this.render = function(e, data) {
-                this.$node.html(template(data));
+                data.data.updated = data.meta.updated;
+                this.$node.html(template(data.data));
             };
             
             this.switchTab = function(e, data) {

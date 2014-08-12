@@ -92,8 +92,6 @@ def update_character_sheet(key_id, vcode, mask, character_id):
     for alert in alerts:
         cooldown = datetime.datetime.utcnow() + datetime.timedelta(minutes=alert.interval)
         remaining = int(data.cloneskillpoints) - skillpoints
-        print(remaining)
-        print(alert.option_1_value)
         if remaining < alert.option_1_value:
             mail.send_alert(alert.user_id, alert, remaining)
             db.update_alert(alert.alert_type_id, alert.user_id, alert.character_id, cooldown)
