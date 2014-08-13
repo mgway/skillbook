@@ -1,15 +1,13 @@
 define(
     [
         'flight/lib/component',
-        'hbs!templates/character_alerts',
+        'hbs!templates/character/alerts',
         'hbs/handlebars'
     ],
     function(defineComponent, template, handlebars) {
         return defineComponent(characterAlert);
         
         function characterAlert () {
-
-            var characterId;
             
             this.defaultAttrs({
                 numberSelector: 'input[type=number]',

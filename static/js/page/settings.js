@@ -1,12 +1,12 @@
 define(
     [
-        'component/settings_character_list',
+        'component/settings/key_list',
     ],
     
-    function(CharacterList) {
+    function(KeyList) {
 
         function initialize() {
-            CharacterList.attachTo("#character_list");
+            KeyList.attachTo("#character_list");
         }
         
         return initialize;

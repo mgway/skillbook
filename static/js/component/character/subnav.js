@@ -1,7 +1,7 @@
 define(
     [
         'flight/lib/component',
-        'hbs!templates/character_subnav'
+        'hbs!templates/character/subnav'
     ],
     function(defineComponent, template) {
         return defineComponent(characterSubnav);

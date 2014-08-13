@@ -1,7 +1,7 @@
 define(
     [
         'flight/lib/component',
-        'hbs!templates/character_queue',
+        'hbs!templates/character/queue',
         'moment'
     ],
     function(defineComponent, template, moment) {

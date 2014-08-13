@@ -2,12 +2,12 @@ define(
     [
         'flight/lib/component',
         'common/ajax',
-        'hbs!templates/settings_key_list'
+        'hbs!templates/settings/key_list'
     ],
     function(defineComponent, ajax, template) {
-        return defineComponent(characterList, ajax);
+        return defineComponent(keyList, ajax);
         
-        function characterList () {
+        function keyList () {
             
             this.defaultAttrs({
                 deleteSelector: '.uk-icon-trash-o',
@@ -24,7 +24,6 @@ define(
                 var id = $(data.el).data('keyid');
                 $.ajax({
                     type: 'DELETE',
-                    headers: {'X-Xsrftoken': getCookie('_xsrf')},
                     url: '/api/key/' + id,
                     success: function() {
                     	$('#key_'+id).slideUp();
@@ -49,7 +48,6 @@ define(
                     xhr: {
                         url: '/api/key/',
                         data: xhr_data, 
-                        headers: {'X-Xsrftoken': getCookie('_xsrf')}
                     },
                     events: {
                         done: 'apiKeysResponse',

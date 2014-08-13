@@ -1,7 +1,7 @@
 define(
     [
         'flight/lib/component',
-        'hbs!templates/character_skills'
+        'hbs!templates/character/skills'
     ],
     function(defineComponent, template) {
         return defineComponent(characterSkills);
