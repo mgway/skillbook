@@ -5,10 +5,11 @@
 		<h2>Account Settings</h2>
 		<div class="uk-grid">
 			<div class="uk-width-medium-1-2">
-				<div class="uk-panel uk-panel-box">
+				<div class="uk-panel uk-panel-box" id="mail">
 					<h3 class="uk-panel-title">Preferences &amp; Stuff</h3>
 					{% if mail %}<div class="uk-alert uk-alert-success">{{ mail }}</div>{% end %}
 					{% if mail_error %}<div class="uk-alert uk-alert-danger">{{ mail_error }}</div>{% end %}
+					<div class="uk-alert" id="mail-validation" style="display: none"></div>
 					<form class="uk-form" method="POST" action="/settings">
 					<fieldset>
 						<div class="uk-form-row">
@@ -71,7 +72,7 @@
 					</form>
 				</div>
 			</div>
-			<div class="uk-width-1-1" id="character_list"></div>
+			<div class="uk-width-1-1" id="character_list" style="padding-top:20px"></div>
 		</div>
 	</div>
 {% end %}
@@ -81,26 +82,4 @@
 	<script src="/static/js/bower_components/es5-shim/es5-sham.js"></script>
 	<script data-main="/static/js/page/settings_boot.js" 
 	src="/static/js/bower_components/requirejs/require.js"></script>
-	<script type="text/javascript">
-		function getCookie(name) {
-			var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
-			return r ? r[1] : undefined;
-		}
-		$('#confirmation').on('click', function(){
-			var that = $(this);
-			if(that.data('sent')){
-				return;
-			}
-			
-			$.ajax({
-				type: 'POST',
-				headers: {'X-Xsrftoken': getCookie('_xsrf')},
-				url: '/mail/confirm',
-				success: function() {
-					that.html('<i class="fa fa-envelope"></i> mail sent');
-					that.data('sent', true);
-				}
-			});
-		});
-	</script>
 {% end %}

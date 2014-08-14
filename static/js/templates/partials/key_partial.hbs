@@ -1,11 +1,11 @@
 <div class="uk-panel uk-panel-box uk-panel-box-secondary" style="margin-top: 10px;" id="key_{{key_id}}">
-	{{#ids}}
-		<img src="http://image.eveonline.com/Character/{{ this }}_64.jpg" style="float:left; padding: 2px;"/>
-	{{/ids}}
+	{{#characters}}
+		<img src="https://image.eveonline.com/Character/{{splitString this}}_64.jpg" alt="{{splitString this position=1}}" style="float:left; padding: 2px;"/>
+	{{/characters}}
 	<div style="float: left; padding: 5px;"> 
-		Characters: {{#each names}} {{this}}{{#unless @last}},{{/unless}} {{/each}}<br />
 		Key ID: {{ key_id }}<br />
-		Key Mask: {{ mask }}
+		Key Mask: {{ mask }}<br />
+		Key Expires: {{#if key_expires}}{{formatTime key_expires}}{{else}}Never{{/if}}
 	</div>
 	<div class="uk-float-right">
 		<a><i data-keyId="{{key_id}}" class="uk-icon-trash-o phony"></i></a>

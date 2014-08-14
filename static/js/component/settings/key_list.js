@@ -9,6 +9,8 @@ define(
         
         function keyList () {
             
+            var timeout;
+            
             this.defaultAttrs({
                 deleteSelector: '.uk-icon-trash-o',
                 formSelector: '#character-add-form'
@@ -29,13 +31,8 @@ define(
                     	$('#key_'+id).slideUp();
                     	localStorage.removeItem('characters');
                     }
-        		});
+                });
             };
-            
-            function getCookie(name) {
-                var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
-                return r ? r[1] : undefined;
-            }
             
             this.addKey = function(e, data) {
                 e.preventDefault();
@@ -86,7 +83,7 @@ define(
                 
                 this.on('click', { 'deleteSelector': this.deleteKey });
                 this.on('submit', { 'formSelector': this.addKey });
-                
+
                 this.trigger('uiKeysRequest');
             });
        }

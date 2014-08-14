@@ -1,3 +1,8 @@
+{{#unless characters}}
+<div class="uk-width-1-1" style="padding-bottom: 10px">
+    <div class="uk-alert">You have not set up any API keys. Head over to the <a href="/settings">accout settings page</a> to get started.</div>
+</div>
+{{/unless}}
 {{#characters}}
 <div class="uk-width-1-1 uk-width-medium-1-1 uk-width-large-1-2" style="padding-bottom: 10px">
     <article class="uk-comment phony" id="character_{{character_id}}">

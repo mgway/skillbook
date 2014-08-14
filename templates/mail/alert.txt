@@ -1,9 +1,13 @@
 Greetings {{ user.username }}, 
 
-    An alert was triggered for your character, {{alert.character_name}}. {{alert.email_description}}
+An alert was triggered for your character, {{alert.character_name}}, because {{alert.email_description}}
 
-    This alert will be on cooldown for the next {{alert.interval}}.
+This alert will be on cooldown for the next {{alert.interval}}.
 
 
 Cheers,
 - skillbook bot
+
+
+PS: Don't want any more alerts from skillbook? Click the link below to unsubscribe
+http{% if config.https %}s{% end %}://{{ config.host }}/mail/unsubscribe?u={{user.user_id}}&t={{ user.email_token }}
