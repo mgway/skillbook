@@ -12,7 +12,7 @@ define(
             var timeout;
             this.defaultAttrs({
                 mailSelector: 'input[name=email]',
-                apiKey: 'pubkey-39bb1e3db1bd1ba1f6658e50f354d67f',
+                apiKey: mailgunKey,
                 confirmSelector: '#confirmation'
             });
             

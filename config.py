@@ -38,6 +38,7 @@ class MailgunConfig(Config):
     key = 'mailgun'
     attrs = dict([
         ('key', 'key-1234567'),
+        ('public_key', 'pubkey-1234567'),
         ('url', 'example.com'),
         ('from_address', 'noreply@domain.com')
     ])

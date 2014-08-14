@@ -122,7 +122,7 @@ class SettingsHandler(BaseHandler):
     def get(self):
         user_id = self.get_current_user()
         prefs = db.get_preferences(user_id)
-        self.render('settings.html', prefs=prefs, **self.messages)
+        self.render('settings.html', prefs=prefs, mailgun_key=config.mail.public_key, **self.messages)
         
     @tornado.web.authenticated
     def post(self):
@@ -251,15 +251,18 @@ class CharacterApiHandler(AjaxHandler):
             if not character_id:
                 characters = api.get_characters(user_id)
                 self.write_message(characters)
-            elif subtype == 'skills':
+            elif subtype == 'skill':
                 skills = api.get_character_skills(user_id, character_id)
                 self.write_message(skills)
             elif subtype == 'queue':
-                skills = api.get_character_queue(user_id, character_id)
-                self.write_message(skills)
-            elif subtype == 'alerts':
-                skills = api.get_character_alerts(user_id, character_id)
-                self.write_message(skills)
+                queue = api.get_character_queue(user_id, character_id)
+                self.write_message(queue)
+            elif subtype == 'alert':
+                alerts = api.get_character_alerts(user_id, character_id)
+                self.write_message(alerts)
+            elif subtype == 'plan':
+                plans = api.get_character_plans(user_id, character_id)
+                self.write_message(plans)
             elif character_id and subtype == None:
                 sheet = api.get_character_sheet(user_id, character_id)
                 self.write_message(sheet)
@@ -274,7 +277,7 @@ class CharacterApiHandler(AjaxHandler):
     def post(self, character_id = None, subtype = None):
         user_id = self.get_current_user()
         try:
-            if subtype == 'alerts':
+            if subtype == 'alert':
                 try:
                     alerts = simplejson.loads(self.request.body)
                 except (simplejson.JSONDecodeError):
