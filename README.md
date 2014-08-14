@@ -7,13 +7,13 @@ Requirements
 
 * postgreql-server >= 9.1
 * postgresql-server-dev-X.Y
-* python >= 3.3
+* python, python-dev >= 3.3
 * redis >= 2.6
-* venv is nice to have but isn't strictly required
+* nginx or lighttpd 
+* virtualenv strongly recommended
 
 **For production:**
 
-* lighttpd or nginx
 * supervisord
 
 All of the python package dependencies can be found in the requirements file:
@@ -32,16 +32,28 @@ PostgreSQL setup
 ---
 Create the user and database:
 
-	$ sudo -u postgres psql
 
+	$ sudo -u postgres psql
+	
 	CREATE DATABASE eveskill;
 	CREATE USER eveskill WITH PASSWORD 'eveskill';
 	GRANT ALL ON DATABASE eveskill TO eveskill;
- 
+
+Ensure that postgres is configured to accept local connections with password auth
+
 Load the schema and static data:
+
 
 	$ bunzip2 -c setup/schema.sql.bz2 | psql -U eveskill
 	$ bunzip2 -c setup/data.sql.bz2 | psql -U eveskill
+
+
+Set the search path of the eveskill user
+
+
+	$ psql -U eveskill eveskill
+
+	SET search_path TO skillbook, public;
 
 
 Server setup
@@ -49,17 +61,23 @@ Server setup
 Once you have all of the dependencies installed and have both the database and redis running:
 
 	$ cp config.yaml.example config.yaml
-	
+
 And configure as appropriate
 
-Run the server with 
+Configure lighttpd or nginx to act as a reverse proxy. Sample configuration files are located in `setup/lighttpd.conf.example` and `setup/nginx.conf.example`
+
+
+**Development:**
+
+Run the server with:
 	
-	$ python server.py
+	$ python server.py				# Server
+	$ celery -A tasks  worker -B 	# Periodic task manager and worker
 
-**For production use:**
 
-* Configure lighttpd or nginx to act as a reverse proxy. Sample configuration files are located in `setup/lighttpd.conf.example` and `setup/nginx.conf.example`
-* Configure supervisord 
+**Production:**
+
+* Configure supervisord
 
 
 License
@@ -76,4 +94,3 @@ EVE Online and the EVE logo are the registered trademarks of CCP hf. All rights 
 All other trademarks are the property of their respective owners. CCP hf. has granted
 permission to use the information and graphics provided within this application but does not 
 endorse, and is not in any way affiliated with this project.
-
