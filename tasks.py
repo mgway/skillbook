@@ -107,7 +107,7 @@ def update_character_queue(key_id, vcode, mask, character_id):
             'response_code': 200,
             'response_error': '',
             'character_id': character_id,
-            'api_method': 'CharacterQueue',
+            'api_method': 'SkillQueue',
             'ignored': False,
             'key_id': key_id}
     db.save_update_status(stat)

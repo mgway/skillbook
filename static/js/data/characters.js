@@ -83,7 +83,7 @@ define(
                 if (skills === null || moment() - moment(skills.refreshTime) > this.attr.interval) {
                     this.get({
                         xhr: {
-                            url: '/api/character/' + data.id + "/skills"
+                            url: '/api/character/' + data.id + "/skill"
                         },
                         events: {
                             done: 'apiCharacterSkillsResponse'
@@ -180,7 +180,7 @@ define(
             this.fetchAlerts = function(e, data) {
                 this.get({
                     xhr: {
-                        url: '/api/character/' + data.id + "/alerts"
+                        url: '/api/character/' + data.id + "/alert"
                     },
                     events: {
                         done: 'dataCharacterAlertListResponse'
@@ -195,7 +195,7 @@ define(
             this.updateAlerts = function(e, data) {
                 this.post({
                     xhr: {
-                        url: '/api/character/' + data.id + "/alerts",
+                        url: '/api/character/' + data.id + "/alert",
                         data: JSON.stringify(data.alerts)
                     },
                     events: {
@@ -208,18 +208,42 @@ define(
                     }
                 });
             };
+            
+            this.fetchPlans = function(e, data) {
+                this.get({
+                    xhr: {
+                        url: '/api/character/' + data.id + "/plan"
+                    },
+                    events: {
+                        done: 'apiCharacterPlanResponse'
+                    },
+                    meta: {
+                        key: 'plans',
+                        characterId: data.id
+                    }
+                });
+            };
+            
+            this.savePlans = function(e, data) {
+                var toSave = {plans: data.plans, refreshTime: moment()};
+                localStorage.setItem('plan_'+data.meta.characterId, JSON.stringify(toSave));
+                
+                this.trigger(document, 'dataCharacterPlanListResponse', toSave);
+            };
 
             this.after('initialize', function () {
                 this.on(document, 'uiCharactersRequest', this.fetchCharacters);
                 this.on(document, 'uiCharacterRequest', this.fetchCharacter);
                 this.on(document, 'uiCharacterRefresh', this.fetchCharacter);
                 this.on(document, 'uiNeedsAlertList', this.fetchAlerts);
+                this.on(document, 'uiNeedsPlanList', this.fetchPlans);
                 this.on(document, 'uiSaveAlertList', this.updateAlerts);
 
                 this.on('dataCharactersResponse', this.saveCharacters);
                 this.on('apiCharacterDetailResponse', this.saveSheet);
                 this.on('apiCharacterQueueResponse', this.saveQueue);
                 this.on('apiCharacterSkillsResponse', this.saveSkills);
+                this.on('apiCharacterPlanResponse', this.savePlans);
             });
         }
     }

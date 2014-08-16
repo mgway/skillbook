@@ -1,7 +1,7 @@
 define(
     [
         'flight/lib/component',
-        'hbs!templates/character/alerts',
+        'hbs!templates/character/alert',
         'hbs/handlebars'
     ],
     function(defineComponent, template, handlebars) {

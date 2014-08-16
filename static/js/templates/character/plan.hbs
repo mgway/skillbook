@@ -1,0 +1,19 @@
+{{#if updated}}
+<div class="uk-alert uk-alert-success">Plans successfully updated</div>
+{{/if}}
+<table class="uk-table uk-table-striped uk-table-condensed">
+    <thead>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Next skill in plan</th>
+    </thead>
+    <tbody>
+        {{#plans}}
+        <tr class="phony plan-row" data-planid="{{ plan_id }}">
+            <td>{{ name }}</td>
+            <td>{{ description }}</td>
+            <td>N/A</td>
+        </tr>
+        {{/plans}}
+    </tbody>
+</table>
