@@ -116,13 +116,14 @@ class RegistrationHandler(BaseHandler):
 
 
 class SettingsHandler(BaseHandler):
-    messages = {'mail_error': '', 'mail': '', 'password_error': '', 'password': ''}
+    messages = {'mail_error': '', 'mail': '', 'password_error': '', 
+        'password': '', 'mailgun_key': config.mail.public_key}
     
     @tornado.web.authenticated
     def get(self):
         user_id = self.get_current_user()
         prefs = db.get_preferences(user_id)
-        self.render('settings.html', prefs=prefs, mailgun_key=config.mail.public_key, **self.messages)
+        self.render('settings.html', prefs=prefs, **self.messages)
         
     @tornado.web.authenticated
     def post(self):
