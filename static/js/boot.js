@@ -9,6 +9,7 @@ requirejs.config({
     underscore: 'bower_components/underscore/underscore',
     schedule: 'bower_components/flight-schedule/lib/schedule',
     history: 'bower_components/flight-history/lib/flight-history',
+    depot: 'bower_components/depot/depot'
   },
   hbs: {
         helpers: true,

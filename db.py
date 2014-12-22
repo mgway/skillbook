@@ -282,7 +282,7 @@ def save_character_sheet(character):
                 u.execute('INSERT INTO character_skill (character_id, type_id, level, skillpoints, updated) VALUES \
                         (%(character_id)s, %(type_id)s, %(level)s, %(skillpoints)s, CURRENT_TIMESTAMP)', skill)
             
-            c.connection.commit()
+            u.connection.commit()
 
 
 def get_character_sheet(character_id):

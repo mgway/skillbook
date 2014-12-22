@@ -1,0 +1,24 @@
+<table class="uk-table uk-table-striped uk-table-condensed">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Training time</th>
+            <th>Rank</th>
+            <th>Attributes</th>
+            <th>SP/Hour</th>
+            <th>Priority</th>
+        </tr>
+    </thead>
+    <tbody>
+    {{#entries}}
+        <tr>
+            <td>{{name}} {{romanize level}}</td>
+            <td>{{timeToComplete ../this this}}</td>
+            <td>{{rank}}</td>
+            <td>{{decodeAttribute primary_attribute}} / {{decodeAttribute secondary_attribute}}</td>
+            <td>{{spPerHour ../this primary_attribute secondary_attribute}}</td>
+            <td>{{priority}}</td>
+        </tr>
+    {{/entries}}
+    </tbody>
+</table>

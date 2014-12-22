@@ -112,13 +112,13 @@ def add_plan_entry(plan_id, type_id, level, priority, sort, meta=None):
     db.add_plan_entry(plan_id, type_id, level, priority, sort, meta)
 
 
-@cached('static:skills')
+@cached('temp21', expires=3)
 def get_all_skills():
     db_skills = db.get_skills()
     skills_dict = dict()
     for skill in db_skills:
         skills_dict[skill['type_id']] = skill
-    return skills_dict
+    return db_skills
 
 
 @cached('static:alerts')

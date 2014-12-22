@@ -1,12 +1,12 @@
 define('templates/helpers/timeToComplete', ['hbs/handlebars'], 
     function(Handlebars) {
         
-        function timeToComplete(skill) {
-            var attr = {164: skill.charisma, 
-				165: skill.intelligence,
-				166: skill.memory,
-				167: skill.perception,
-				168: skill.willpower
+        function timeToComplete(character, skill) {
+            var attr = {164: character.charisma, 
+				165: character.intelligence,
+				166: character.memory,
+				167: character.perception,
+				168: character.willpower
 			};
 			
 			var sp_hour = spPerHour(attr[skill.primary_attribute], attr[skill.secondary_attribute]);

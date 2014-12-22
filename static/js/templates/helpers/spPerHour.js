@@ -1,14 +1,14 @@
 define('templates/helpers/spPerHour', ['hbs/handlebars'], 
     function(Handlebars) {
         
-        function spPerHour(skill) {
-            var attr = {164: skill.charisma, 
-				165: skill.intelligence,
-				166: skill.memory,
-				167: skill.perception,
-				168: skill.willpower
+        function spPerHour(character, primary_attribute, secondary_attribute) {
+            var attr = {164: character.charisma, 
+				165: character.intelligence,
+				166: character.memory,
+				167: character.perception,
+				168: character.willpower
 			};
-			return (attr[skill.primary_attribute] + attr[skill.secondary_attribute]/2) * 60;
+			return (attr[primary_attribute] + attr[secondary_attribute]/2) * 60;
         }
 
         Handlebars.registerHelper('spPerHour', spPerHour);

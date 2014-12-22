@@ -30,13 +30,13 @@ def perform_updates(key_id=None):
 
     for row in rows:
         if row.api_method == 'APIKeyInfo':
-            update_api_key.delay(row.key_id, row.vcode, row.character_id)
+            update_api_key.apply_async(args=[row.key_id, row.vcode, row.character_id], expires=600)
         if row.api_method == 'CharacterSheet':
-            update_character_sheet.delay(row.key_id, row.vcode, row.mask, row.character_id)
+            update_character_sheet.apply_async(args=[row.key_id, row.vcode, row.mask, row.character_id], expires=600)
         elif row.api_method == 'SkillQueue':
-            update_character_queue.delay(row.key_id, row.vcode, row.mask, row.character_id)
+            update_character_queue.apply_async(args=[row.key_id, row.vcode, row.mask, row.character_id], expires=600)
         elif row.api_method == 'CharacterInfo':
-            update_character_info_public.delay(row.key_id, row.character_id)
+            update_character_info_public.apply_async(args=[row.key_id, row.character_id], expires=600)
         else:
             raise SkillbookException('Unknown API method %s' % row.api_method)
 

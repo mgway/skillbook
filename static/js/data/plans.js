@@ -59,7 +59,7 @@ define(
                         }
                     });
                 } else {
-                    this.trigger(document, 'dataPlanResponse', plan);
+                    this.trigger(document, 'dataPlanEntries', plan);
                 }
             };
             
@@ -101,8 +101,8 @@ define(
             };
             
             this.after('initialize', function () {
-                this.on(document, 'uiPlansRequest', this.fetchPlans);
-                this.on(document, 'uiPlanRequest', this.fetchPlan);
+                this.on(document, 'uiNeedsPlanList', this.fetchPlans);
+                this.on(document, 'uiNeedsPlanEntries', this.fetchPlan);
                 this.on(document, 'uiAddPlanRequest', this.addPlan);
                 this.on(document, 'uiAddPlanEntryRequest', this.addPlanEntry);
                 

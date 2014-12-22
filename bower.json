@@ -17,7 +17,8 @@
     "flight-schedule": "0.0.1",
     "underscore": "1.6.0",
     "requirejs": "2.1.14",
-    "flight-history": "~0.0.1"
+    "flight-history": "~0.0.1",
+    "depot": "~0.1.6"
   },
   "license": "AGPL3",
   "private": true,

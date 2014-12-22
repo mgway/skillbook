@@ -1,7 +1,7 @@
 define(
     [
         'flight/lib/component',
-        'hbs!templates/plan_list'
+        'hbs!templates/plan/list'
     ],
     function(defineComponent, template) {
         return defineComponent(characterList);
@@ -22,12 +22,12 @@ define(
             
             this.requestDisplayPlan = function(e, data) {
                 var id = $(data.el).attr('id').split('_')[1];
-                this.trigger(document, 'uiPlanRequest', {id: id});
+                this.trigger(document, 'uiNeedsPlanEntries', {id: id});
             };
            
             this.after('initialize', function() {
                 this.on(document, 'dataPlansResponse', this.render);
-                this.on(document, 'uiPlanRequest', this.hide);
+                this.on(document, 'uiNeedsPlanEntries', this.hide);
                 
                 this.on('click', { 'clickSelector': this.requestDisplayPlan });
             });
